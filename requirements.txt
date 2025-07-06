@@ -1,15 +1,22 @@
-# Core dependencies for OpenAI-based setup
-tiktoken
-langchain
-langchain-openai
+# Core dependencies for FastAPI RAG implementation
 google-api-python-client
 requests
 openai
-yt_dlp
+yt-dlp
 
-# Vector database and local embeddings (commented out for OpenAI-only setup)
-# Uncomment these if switching to local/Ollama setup:
-# chromadb                 # Vector database storage - requires torch/CUDA
-# langchain-community      # Additional LangChain integrations
-# langchain-nomic          # Nomic embeddings provider
-# sentence_transformers    # Local HuggingFace embeddings - requires torch/CUDA
+# FAISS for vector storage
+faiss-cpu
+
+# Additional utilities
+numpy
+pandas
+
+# FastAPI and related packages
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+sse-starlette>=1.6.5
+httpx>=0.25.0
+pydantic>=2.0.0
+
+# Note: This requirements.txt file is now redundant since we use pyproject.toml
+# Install with: uv sync

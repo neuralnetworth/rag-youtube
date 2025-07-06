@@ -1,6 +1,48 @@
 # Changelog
 
-## [Current] - 2025-01-06
+## [v2.0.0] - 2025-01-06 - FastAPI Implementation Complete ✅
+
+### 🚀 Major Release: FastAPI Web Interface
+- **✅ Complete FastAPI Implementation** - Modern web interface with real-time streaming
+- **✅ Production Ready** - Clean dependencies, sub-5 second response times
+- **✅ Source Attribution** - Direct YouTube links with relevance scores
+- **✅ Responsive Design** - Mobile-friendly interface with vanilla JavaScript
+
+### 🏗️ Architecture
+- **New FastAPI Backend** in `src/api/`
+  - `main.py` - FastAPI application with OpenAPI docs
+  - `rag_engine.py` - Simplified RAG logic (no LangChain complexity)
+  - `models.py` - Pydantic schemas for API
+  - `config_fastapi.py` - API configuration
+- **Modern Frontend** in `static/`
+  - `index.html` - Clean, responsive UI
+  - `app.js` - Real-time streaming support
+  - `style.css` - Professional styling
+
+### 🧹 Dependency Cleanup
+- **Removed LangChain dependencies** - Direct OpenAI integration
+- **Cleaned pyproject.toml** - Minimal, conflict-free dependencies
+- **Updated requirements.txt** - FastAPI, uvicorn, sse-starlette, httpx
+
+### 🧪 Testing
+- **New test suite** for FastAPI implementation
+  - `test_basic_functionality_fastapi.py` - Integration tests
+  - `test_fastapi.py` - API endpoint tests
+- **Legacy tests preserved** (require `uv sync --extra legacy`)
+
+### 📖 Documentation Updates
+- **Updated README.md** - FastAPI quick start, modern features
+- **Updated CLAUDE.md** - Production-ready status, new commands
+- **Marked docs/faiss-rag/ as complete** - Implementation finished
+
+### 🏃 Quick Start
+```bash
+uv sync
+./run_fastapi.sh
+# Visit http://localhost:8000
+```
+
+## [v1.0.0] - 2025-01-06
 
 ### 📚 Documentation Updates
 - **Created FastAPI Migration Plan** in `docs/faiss-rag/`

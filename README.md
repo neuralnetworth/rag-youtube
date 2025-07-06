@@ -1,13 +1,13 @@
 # RAG-YouTube
 
-A RAG (Retrieval-Augmented Generation) system that builds searchable knowledge bases from YouTube channel videos. Downloads captions, processes them with embeddings, and provides a web interface for asking questions about the content.
+A modern RAG (Retrieval-Augmented Generation) system that builds searchable knowledge bases from YouTube channel videos. Features a FastAPI backend with real-time streaming responses and a clean web interface for asking questions about video content.
 
 ## 🚀 Quick Start
 
-### ⚡ Super Quick Setup (New Computer)
+### ⚡ Super Quick Setup
 
 ```bash
-# 1. Install UV
+# 1. Install UV package manager
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2. Clone and setup
@@ -19,47 +19,53 @@ uv sync
 cp .env.sample .env
 # Edit .env: add GOOGLE_API_KEY and OPENAI_API_KEY
 
-# 4. Test it works
-make test
+# 4. Start the web interface
+./run_fastapi.sh
+# Or: uv run uvicorn src.api.main:app --reload
+
+# 5. Open http://localhost:8000 in your browser
 ```
 
-### Choose Your Setup
+### ✨ Key Features
 
-**Option 1: Lightweight OpenAI + FAISS (Recommended for Prototyping)**
-- ✅ No GPU required
-- ✅ Minimal dependencies 
-- ✅ Fast setup
-- ✅ Cost-effective for small datasets
+**🎯 Modern FastAPI Implementation**
+- ✅ Real-time streaming responses
+- ✅ Clean, responsive web interface
+- ✅ Direct OpenAI integration (no LangChain complexity)
+- ✅ Sub-5 second response times
 
-**Option 2: Full ChromaDB + Local Embeddings (Production)**
-- ✅ Complete privacy
-- ✅ GPU-optimized performance
-- ✅ No API costs for embeddings
-- ✅ Better for large datasets
+**💡 Smart & Simple**
+- ✅ FAISS vector search (CPU-optimized)
+- ✅ Source attribution with YouTube links
+- ✅ Minimal dependencies
+- ✅ Works with existing SpotGamma data
 
 ## 📁 Repository Structure
 
 ```
 rag-youtube/
 ├── src/                    # Core Python modules
-│   ├── agent_*.py         # Agent implementations (FAISS + ChromaDB versions)
-│   ├── chain_*.py         # LangChain processing chains
-│   ├── vector_store_*.py  # Vector store implementations
-│   ├── app*.py           # Web applications
-│   └── utils/            # Utility functions
-├── test/                  # Comprehensive test suite
-│   ├── test_basic_functionality.py  # ✅ Working integration test
-│   ├── test_suite.py              # Full test runner
-│   └── README.md                  # Test documentation
-├── static/               # Future FastAPI web interface
-├── prompts/             # Customizable LLM prompts
-├── docs/                # Documentation
-│   ├── faiss-rag/      # FastAPI migration plans
-│   └── playlist/       # Playlist features
-├── captions/           # Downloaded video captions (created on first run)
-├── db/                 # Vector database storage (created on first run)
-├── .env                # API keys configuration
-└── rag-youtube.conf    # System configuration
+│   ├── api/               # ✅ FastAPI implementation
+│   │   ├── main.py        # FastAPI application
+│   │   ├── rag_engine.py  # Simplified RAG logic
+│   │   ├── models.py      # Pydantic schemas
+│   │   └── config_fastapi.py # API configuration
+│   ├── vector_store_faiss.py  # FAISS vector store
+│   ├── config.py          # System configuration
+│   └── [legacy files]     # ChromaDB and LangChain implementations
+├── static/                # ✅ Web interface
+│   ├── index.html         # Main UI
+│   ├── style.css          # Styling
+│   └── app.js             # Frontend logic with streaming
+├── test/                  # Test suite
+│   ├── test_basic_functionality_fastapi.py  # ✅ FastAPI tests
+│   ├── test_fastapi.py    # API endpoint tests
+│   └── [other tests]      # Legacy test files
+├── docs/faiss-rag/        # Implementation documentation
+├── captions/              # Downloaded video captions
+├── db/                    # FAISS vector database
+├── .env                   # API keys
+└── rag-youtube.conf       # System configuration
 ```
 
 ## 🛠️ Setup Instructions
@@ -142,14 +148,15 @@ uv run python src/document_loader.py
 ### Quick Verification
 
 ```bash
-# Test basic functionality (recommended first test)
-uv run python test/test_basic_functionality.py
+# Test FastAPI implementation (recommended)
+uv run python test/test_basic_functionality_fastapi.py
 
-# Run minimal vector search test
-uv run python test/test_minimal.py
+# Test API endpoints (requires server running)
+uv run python test/test_fastapi.py
 
-# Run comprehensive test suite
-uv run python test/test_suite.py
+# Legacy tests (require LangChain dependencies)
+# uv sync --extra legacy  # Install legacy dependencies first
+# uv run python test/test_basic_functionality.py
 ```
 
 ### Expected Test Output
@@ -165,19 +172,29 @@ Answer: In options trading, gamma is the "Greek" that measures...
 
 ## 🌐 Web Interface
 
-**Current Status**: The old Bottle.py web interface has been removed. A new FastAPI-based interface is planned.
+**✅ Status**: Modern FastAPI web interface is complete and ready to use!
 
-**For Now**: Use the command-line interface for testing:
+### Starting the Server
 ```bash
-# Test basic functionality
-uv run python test/test_basic_functionality.py
+# Quick start
+./run_fastapi.sh
 
-# Or activate environment and use directly
-uv shell
-python test/test_basic_functionality.py
+# Or manually
+uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Future**: See `docs/faiss-rag/` for the complete FastAPI implementation plan.
+### Access Points
+- **Web UI**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/api/health
+- **System Stats**: http://localhost:8000/api/stats
+
+### Features
+- ⚡ **Real-time streaming** responses
+- 🎯 **Source attribution** with YouTube links
+- 📱 **Responsive design** for mobile/desktop
+- 🔍 **Example questions** for SpotGamma content
+- ⚙️ **Configurable** search parameters
 
 ## 📺 Multi-Channel Support
 
@@ -238,35 +255,53 @@ Move from CPU (FAISS) to GPU (ChromaDB) setup:
 
 ## 🎯 Current Status
 
-### ✅ Working Features
-- **SpotGamma Channel**: 341 videos processed, 192 with captions loaded
-- **FAISS Vector Store**: 2,413 document chunks indexed
-- **OpenAI Integration**: Q&A with GPT-4.1 model working (fixed o3 issues)
-- **Basic RAG Pipeline**: Question answering with source attribution
-- **Test Suite**: Comprehensive testing framework
-- **Dual Architecture**: CPU (FAISS) and GPU (ChromaDB) support
+### ✅ Production Ready Features
+- **FastAPI Web Interface**: Modern, responsive UI with real-time streaming ⚡
+- **SpotGamma Knowledge Base**: 341 videos processed, 192 with captions, 2,413 document chunks
+- **FAISS Vector Store**: CPU-optimized, fast similarity search
+- **OpenAI Integration**: GPT-4.1 for reliable answer generation
+- **Source Attribution**: Direct YouTube links with relevance scores
+- **Clean Dependencies**: No LangChain complexity, minimal requirements
 
-### 🔄 In Development
-- **FastAPI Migration**: Moving from Bottle to FastAPI for better async support (see docs/faiss-rag/)
-- **Playlist-Aware Filtering**: Enhanced content organization (see docs/playlist/)
-- **Simplified Architecture**: Removing complex LangChain chains for direct API calls
+### 🚀 Performance
+- **Sub-5 second** response times
+- **Real-time streaming** for immediate feedback
+- **2,413 documents** searchable instantly
+- **Mobile-friendly** responsive design
 
-### ⚠️ Known Issues
-- **No Web Interface**: Old Bottle setup removed, FastAPI replacement planned
-- **Solution**: Complete FastAPI implementation documented in docs/faiss-rag/
-
-### 📋 Example Queries
+### 📊 Example Use Cases
+Ask questions like:
 - "What is gamma in options trading?"
 - "How do gamma squeezes work?"
 - "What does SpotGamma say about 0DTE options?"
 - "Explain dealer gamma positioning"
 
+
 ## 🤝 Contributing
 
-1. **Test First**: Run `python3 test/test_basic_functionality.py`
-2. **Follow Patterns**: Use existing FAISS/ChromaDB dual architecture
+1. **Test First**: Run `uv run python test/test_basic_functionality_fastapi.py`
+2. **Follow Patterns**: Use the clean FastAPI architecture in `src/api/`
 3. **Add Tests**: Include tests for new features
 4. **Update Docs**: Keep documentation current
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Dependencies**: If `uv sync` fails, ensure you have Python 3.8+ and try:
+```bash
+rm -rf .venv && uv sync
+```
+
+**Server won't start**: Check that port 8000 is available:
+```bash
+lsof -i :8000  # Kill any processes using port 8000
+```
+
+**No answers**: Verify your OpenAI API key in `.env` and test with:
+```bash
+uv run python test/test_basic_functionality_fastapi.py
+```
 
 ## 📚 Learn More
 

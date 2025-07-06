@@ -6,9 +6,6 @@ readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     # Core dependencies for OpenAI-based setup
-    "tiktoken",
-    "langchain",
-    "langchain-openai", 
     "google-api-python-client",
     "requests",
     "openai",
@@ -27,26 +24,20 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Full setup with local embeddings and ChromaDB (GPU recommended)
-full = [
-    "chromadb",                 # Vector database storage - requires torch/CUDA
-    "langchain-community",      # Additional LangChain integrations  
-    "langchain-nomic",          # Nomic embeddings provider
-    "sentence-transformers",    # Local HuggingFace embeddings - requires torch/CUDA
-    "torch",                    # PyTorch for GPU acceleration
-]
-
 # Development dependencies
 dev = [
     "pytest",
     "black",
-    "isort",
+    "isort", 
     "flake8",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [tool.black]
 line-length = 88

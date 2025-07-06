@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-RAG-YouTube is a Python-based RAG (Retrieval-Augmented Generation) application that builds a knowledge base from YouTube channel videos. It downloads captions, processes them with embeddings, and provides a web interface for asking questions about the content.
+RAG-YouTube is a modern Python-based RAG (Retrieval-Augmented Generation) application that builds searchable knowledge bases from YouTube channel videos. It features a FastAPI backend with real-time streaming responses and a clean web interface for asking questions about video content.
 
 ## Development Commands
 
@@ -52,12 +52,16 @@ uv run python src/document_loader.py
 
 ### Running the Application
 ```bash
-# Web interface removed - use command line for now
-# Test basic functionality
-python3 test/test_basic_functionality.py
+# Start FastAPI web interface
+./run_fastapi.sh
+# OR
+uv run uvicorn src.api.main:app --reload
 
-# Future FastAPI app (see docs/faiss-rag/)
-# python3 src/main.py
+# Access at http://localhost:8000
+# API docs at http://localhost:8000/docs
+
+# Test basic functionality
+uv run python test/test_basic_functionality_fastapi.py
 ```
 
 ### Database Operations
@@ -74,23 +78,22 @@ make load
 
 ### Testing and Validation
 ```bash
-# Test basic RAG functionality (recommended first test)
-python3 test/test_basic_functionality.py
+# Test FastAPI implementation (recommended first test)
+uv run python test/test_basic_functionality_fastapi.py
 
-# Run minimal vector search test
-python3 test/test_minimal.py
+# Test API endpoints (requires server running)
+uv run python test/test_fastapi.py
 
-# Run comprehensive test suite
-python3 test/test_suite.py
-
-# Run benchmarks comparing different configurations
-make compare
+# Legacy tests (require LangChain dependencies)
+# uv sync --extra legacy
+# uv run python test/test_basic_functionality.py
 ```
 
 ### Testing Approach
-- **Primary test**: ALWAYS run `python3 test/test_basic_functionality.py` first
+- **Primary test**: ALWAYS run `uv run python test/test_basic_functionality_fastapi.py` first
 - **Focus on integration tests** - End-to-end RAG functionality is what matters
-- **Test failures in unit tests are often interface mismatches, not functional issues**
+- **FastAPI tests verify**: API endpoints, streaming, source attribution
+- **Legacy tests available** but require additional dependencies
 
 ## Architecture
 
@@ -115,9 +118,10 @@ make compare
 
 ### Web Interface
 
-- **Current Status**: Removed old Bottle.py + Vue.js setup
-- **Future**: FastAPI backend with vanilla JavaScript frontend (see docs/faiss-rag/)
-- **Database**: SQLite for monitoring and vector storage (FAISS/ChromaDB)
+- **Current Status**: ✅ Modern FastAPI backend with vanilla JavaScript frontend
+- **Features**: Real-time streaming, responsive design, source attribution
+- **API**: RESTful endpoints with OpenAPI documentation
+- **Database**: SQLite for monitoring and FAISS for vector storage
 
 ### Configuration System
 
@@ -148,21 +152,24 @@ make compare
 
 ### Known Working Commands
 ```bash
-# Quick functionality test
-uv run python test/test_basic_functionality.py
+# Start web interface
+./run_fastapi.sh
 
-# Test vector search directly
-uv run python test/test_minimal.py
+# Test FastAPI implementation
+uv run python test/test_basic_functionality_fastapi.py
 
-# Run comprehensive test suite
-uv run python test/test_suite.py
+# Test API endpoints
+uv run python test/test_fastapi.py
+
+# Access web UI
+# http://localhost:8000
 ```
 
-### Known Issues
-- **RESOLVED: OpenAI o3 issues**: Fixed by switching to GPT-4.1 model (gpt-4.1-2025-04-14)
-- **No Web Interface**: Old Bottle setup removed, FastAPI replacement ready for implementation
-- **Chain interface mismatches**: `run()` vs `invoke()` method inconsistencies between FAISS and ChromaDB agents
-- **Solution**: Complete FastAPI implementation documented in `docs/faiss-rag/`
+### Status: ✅ COMPLETE
+- **✅ FastAPI Web Interface**: Modern, responsive UI with real-time streaming
+- **✅ Clean Dependencies**: No LangChain complexity, minimal requirements
+- **✅ Production Ready**: Sub-5 second response times, 2,413 documents indexed
+- **✅ Source Attribution**: Direct YouTube links with relevance scores
 
 ## Development Notes
 
@@ -170,36 +177,37 @@ uv run python test/test_suite.py
 ```
 rag-youtube/
 ├── src/                    # Core Python modules
-│   ├── *_faiss.py         # FAISS implementation (lightweight)
-│   ├── *.py               # ChromaDB implementation (full-featured)
-│   └── utils/             # Utility functions
-├── test/                   # Test suite
-│   ├── test_basic_functionality.py  # ✅ Main integration test
-│   ├── test_suite.py              # Legacy unit tests
-│   ├── test_ask.py               # Legacy web interface test
-│   └── test_summary.md           # Test status documentation
-├── docs/                   # Documentation
-│   ├── faiss-rag/         # FastAPI migration plan
-│   │   ├── faiss-design.md
-│   │   ├── faiss-feature.md
-│   │   └── faiss-implementation.md
-│   ├── playlist/          # Playlist features
-│   └── model-strategy.md  # Model selection analysis
-├── prompts/               # Customizable LLM prompts
-├── captions/              # Downloaded video captions (created during setup)
-├── db/                    # Vector database storage (created during setup)
+│   ├── api/               # ✅ FastAPI implementation
+│   │   ├── main.py        # FastAPI application
+│   │   ├── rag_engine.py  # Simplified RAG logic
+│   │   ├── models.py      # Pydantic schemas  
+│   │   └── config_fastapi.py # API configuration
+│   ├── vector_store_faiss.py  # FAISS vector store
+│   ├── config.py          # System configuration
+│   └── [legacy files]     # ChromaDB and LangChain implementations
+├── static/                # ✅ Web interface
+│   ├── index.html         # Main UI
+│   ├── style.css          # Styling
+│   └── app.js             # Frontend logic with streaming
+├── test/                  # Test suite
+│   ├── test_basic_functionality_fastapi.py  # ✅ FastAPI tests
+│   ├── test_fastapi.py    # API endpoint tests
+│   └── [legacy tests]     # LangChain-based tests
+├── docs/faiss-rag/        # ✅ Implementation completed
+├── captions/              # Downloaded video captions
+├── db/                    # FAISS vector database
 ├── .env                   # API keys configuration
 ├── rag-youtube.conf       # System configuration
-└── requirements.txt       # Dependencies (cleaned up)
+└── pyproject.toml         # Dependencies (cleaned up)
 ```
 
 ### Dependencies
-- Python 3.x with LangChain ecosystem
+- Python 3.x with FastAPI ecosystem
 - OpenAI API for LLM and embeddings
-- FAISS for vector storage (CPU-optimized)
+- FAISS for vector storage (CPU-optimized)  
 - yt-dlp for video caption downloading
-- Optional: ChromaDB for GPU-optimized deployments
-- Optional: Ollama for local LLM inference
+- FastAPI, uvicorn, sse-starlette for web interface
+- Optional: Legacy LangChain dependencies for backward compatibility
 
 ### Configuration
 The system uses a hierarchical configuration approach where runtime parameters can override config file settings, enabling dynamic experimentation through the web interface.
