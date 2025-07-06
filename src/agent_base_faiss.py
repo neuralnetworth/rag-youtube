@@ -73,12 +73,13 @@ class AgentBase:
     def _build_llm(self, parameters: ChainParameters) -> BaseLanguageModel:
         """Build LLM based on configuration."""
         if parameters.llm == 'openai':
+            # GPT-4.1 supports all standard parameters
             return ChatOpenAI(
                 model=parameters.llm_model(),
                 temperature=parameters.llm_temperature,
                 openai_api_key=self.config.openai_api_key(),
                 openai_organization=self.config.openai_org_id(),
-                max_completion_tokens=4096  # Use o3-compatible parameter
+                max_tokens=16384  # GPT-4.1 uses max_tokens, not max_completion_tokens
             )
         else:
             # Ollama support (if needed later)

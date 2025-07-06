@@ -2,6 +2,12 @@
 
 ## [Current] - 2025-01-06
 
+### 🔧 Configuration Updates
+- **Switched from o3 to GPT-4.1** (`gpt-4.1-2025-04-14`)
+  - o3 is a reasoning model, not optimal for RAG synthesis tasks
+  - GPT-4.1 is a generative model better suited for Q&A from retrieved content
+  - See `docs/model-strategy.md` for detailed analysis
+
 ### ✅ Completed Features
 
 #### SpotGamma Channel Implementation
