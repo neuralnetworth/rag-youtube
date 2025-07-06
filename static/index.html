@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG-YouTube - SpotGamma Knowledge Base</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>RAG-YouTube</h1>
+            <p class="subtitle">Ask questions about SpotGamma's YouTube videos</p>
+        </header>
+
+        <main>
+            <section class="search-section">
+                <form id="question-form">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="question-input" 
+                            placeholder="Ask a question about options, gamma, market analysis..."
+                            maxlength="1000"
+                            required
+                        >
+                        <button type="submit" id="submit-btn">
+                            <span class="btn-text">Ask</span>
+                            <span class="btn-loading" style="display: none;">Thinking...</span>
+                        </button>
+                    </div>
+                    
+                    <div class="options">
+                        <label>
+                            <input type="checkbox" id="stream-checkbox" checked>
+                            Stream response
+                        </label>
+                        <label>
+                            Sources: 
+                            <select id="num-sources">
+                                <option value="3">3</option>
+                                <option value="4" selected>4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                            </select>
+                        </label>
+                    </div>
+                </form>
+            </section>
+
+            <section id="results-section" class="results-section" style="display: none;">
+                <div class="answer-container">
+                    <h2>Answer</h2>
+                    <div id="answer-content" class="answer-content"></div>
+                    <div id="processing-time" class="processing-time"></div>
+                </div>
+
+                <div class="sources-container">
+                    <h2>Sources</h2>
+                    <div id="sources-list" class="sources-list"></div>
+                </div>
+            </section>
+
+            <section id="examples-section" class="examples-section">
+                <h3>Example Questions</h3>
+                <ul class="example-questions">
+                    <li><a href="#" class="example-link">What is gamma in options trading?</a></li>
+                    <li><a href="#" class="example-link">How do gamma squeezes work?</a></li>
+                    <li><a href="#" class="example-link">What is SpotGamma's approach to 0DTE options?</a></li>
+                    <li><a href="#" class="example-link">Explain dealer gamma positioning</a></li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <div class="stats" id="stats-container">
+                <span id="stats-docs">Loading stats...</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
