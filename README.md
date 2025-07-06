@@ -32,7 +32,7 @@ rag-youtube/
 │   ├── test_basic_functionality.py  # ✅ Working integration test
 │   ├── test_suite.py              # Full test runner
 │   └── README.md                  # Test documentation
-├── public/               # Web interface (HTML, CSS, JS)
+├── static/               # Future FastAPI web interface
 ├── prompts/             # Customizable LLM prompts
 ├── docs/                # Documentation
 │   ├── faiss-rag/      # FastAPI migration plans
@@ -141,17 +141,20 @@ Found 3 relevant documents:
 Answer: In options trading, gamma is the "Greek" that measures...
 ```
 
-## 🌐 Start the Web Interface
+## 🌐 Web Interface
 
+**Current Status**: The old Bottle.py web interface has been removed. A new FastAPI-based interface is planned.
+
+**For Now**: Use the command-line interface for testing:
 ```bash
-# For FAISS setup
-python3 src/app_faiss.py
+# Test basic functionality
+python3 test/test_basic_functionality.py
 
-# For ChromaDB setup
-python3 src/app.py
-
-# Access at http://localhost:5555
+# Run interactive queries (planned)
+# python3 src/cli.py
 ```
+
+**Future**: See `docs/faiss-rag/` for the complete FastAPI implementation plan.
 
 ## 📺 Multi-Channel Support
 
@@ -226,8 +229,8 @@ Move from CPU (FAISS) to GPU (ChromaDB) setup:
 - **Simplified Architecture**: Removing complex LangChain chains for direct API calls
 
 ### ⚠️ Known Issues
-- **Current Web Interface**: Bottle + Vue.js setup has compatibility issues
-- **Solution**: Complete FastAPI rewrite documented in docs/faiss-rag/
+- **No Web Interface**: Old Bottle setup removed, FastAPI replacement planned
+- **Solution**: Complete FastAPI implementation documented in docs/faiss-rag/
 
 ### 📋 Example Queries
 - "What is gamma in options trading?"

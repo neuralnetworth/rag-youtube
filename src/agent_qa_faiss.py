@@ -22,12 +22,13 @@ class AgentQA(AgentBase):
     self._build_vectorstore()
     # LLM is built per request with specific parameters
 
-  def ask(self, parameters: ChainParameters) -> dict:
+  def ask(self, question: str, parameters: ChainParameters) -> dict:
 
     # init
     self.parameters = parameters
+    self.question = question
     response = None
-    callback = CallbackHandler(parameters.question, parameters)
+    callback = CallbackHandler(question, parameters)
     
     # Build LLM for this request
     self.llm = self._build_llm(parameters)
@@ -47,18 +48,18 @@ class AgentQA(AgentBase):
     if parameters.llm_retriever_multiquery:
       retriever = self._build_multiquery_retriever(retriever, callback)
 
-    # eval
-    if parameters.chain_type == 'qa_sources' or (parameters.chain_type is None and parameters.memory is None):
-      chain = QAChainBaseWithSources(self.llm, retriever, callback, self.config)
-      response = chain.run(parameters)
-    elif parameters.chain_type == 'qa_basic' or (parameters.chain_type is None and parameters.memory):
-      chain = QAChainBase(self.llm, retriever, callback, self.config)
+    # eval - map 'base' and 'sources' to the correct chain types
+    if parameters.chain_type in ['qa_sources', 'sources'] or (parameters.chain_type is None and parameters.memory is None):
+      chain = QAChainBaseWithSources(self.llm, retriever, callback, parameters)
+      response = chain.invoke(question)
+    elif parameters.chain_type in ['qa_basic', 'base'] or (parameters.chain_type is None and parameters.memory):
+      chain = QAChainBase(self.llm, retriever, callback, parameters)
       memory = self._build_memory(parameters.memory, parameters.memory_window_size)
-      response = chain.run(parameters, memory)
-    elif parameters.chain_type == 'qa_conversational':
-      chain = QAChainConversational(self.llm, retriever, callback, self.config)
+      response = chain.invoke(question)
+    elif parameters.chain_type in ['qa_conversational', 'conversational']:
+      chain = QAChainConversational(self.llm, retriever, callback, parameters)
       memory = self._build_memory(parameters.memory, parameters.memory_window_size)
-      response = chain.run(parameters, memory)
+      response = chain.invoke(question)
     else:
       raise ValueError(f'Unknown chain: {parameters.chain_type}')
 
@@ -68,7 +69,7 @@ class AgentQA(AgentBase):
 
     # save to database
     self.database.save({
-      'question': parameters.question,
+      'question': question,
       'answer': response['answer'],
       'sources': response['sources'] if 'sources' in response else [],
       'callbacks': callback.get(),

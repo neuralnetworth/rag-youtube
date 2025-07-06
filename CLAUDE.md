@@ -49,14 +49,12 @@ GOOGLE_API_KEY=XXXX ./src/list_videos.py VIDEO_ID
 
 ### Running the Application
 ```bash
-# For FAISS setup:
-python3 src/app_faiss.py
+# Web interface removed - use command line for now
+# Test basic functionality
+python3 test/test_basic_functionality.py
 
-# For ChromaDB setup:
-python3 src/app.py
-
-# Development with auto-reload
-make run
+# Future FastAPI app (see docs/faiss-rag/)
+# python3 src/main.py
 ```
 
 ### Database Operations
@@ -109,9 +107,9 @@ make compare
 
 ### Web Interface
 
-- **Backend**: Bottle.py web framework (`src/app.py`)
-- **Frontend**: Vue.js components for configuration and visualization
-- **Database**: SQLite for monitoring and ChromaDB for vector storage
+- **Current Status**: Removed old Bottle.py + Vue.js setup
+- **Future**: FastAPI backend with vanilla JavaScript frontend (see docs/faiss-rag/)
+- **Database**: SQLite for monitoring and vector storage (FAISS/ChromaDB)
 
 ### Configuration System
 
@@ -145,24 +143,24 @@ make compare
 # Quick functionality test
 python3 test/test_basic_functionality.py
 
-# Start FAISS-based web app
-python3 src/app_faiss.py
-
 # Test vector search directly
 python3 test/test_minimal.py
+
+# Run comprehensive test suite
+python3 test/test_suite.py
 ```
 
 ### Known Issues
 - **RESOLVED: OpenAI o3 issues**: Fixed by switching to GPT-4.1 model (gpt-4.1-2025-04-14)
-- **Web Interface**: Current Bottle + Vue.js setup has compatibility issues with LangChain
+- **No Web Interface**: Old Bottle setup removed, FastAPI replacement ready for implementation
 - **Chain interface mismatches**: `run()` vs `invoke()` method inconsistencies between FAISS and ChromaDB agents
-- **Solution in Progress**: Complete FastAPI rewrite documented in `docs/faiss-rag/`
+- **Solution**: Complete FastAPI implementation documented in `docs/faiss-rag/`
 
 ## Development Notes
 
 ### File Structure
 - `src/`: Core Python modules with dual architecture (*_faiss.py for FAISS, standard files for ChromaDB)
-- `public/`: Web interface assets (HTML, CSS, JS)
+- `static/`: Future FastAPI web interface assets
 - `prompts/`: Customizable LLM prompts
 - `test/`: Comprehensive test suite with working integration tests
 - `docs/`: Documentation
@@ -289,7 +287,7 @@ The current Bottle + Vue.js web interface has significant compatibility issues w
    - Create simple HTML/JS frontend in `static/`
    - Reuse existing FAISS index and metadata
 
-### When to use which setup
-- **Current Bottle setup**: Only for testing the existing system
-- **FastAPI setup**: For all new development and production use
-- **Test basic functionality first**: Always run `python3 test/test_basic_functionality.py` before web development
+### Development Approach
+- **Core RAG**: Fully functional with command-line testing
+- **FastAPI Web Interface**: Ready for implementation using `docs/faiss-rag/`
+- **Test First**: Always run `python3 test/test_basic_functionality.py` to verify RAG functionality

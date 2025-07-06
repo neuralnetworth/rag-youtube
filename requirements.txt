@@ -1,5 +1,4 @@
 # Core dependencies for OpenAI-based setup
-bottle
 tiktoken
 langchain
 langchain-openai

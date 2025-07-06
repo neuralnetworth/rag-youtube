@@ -4,7 +4,8 @@ load:
 	./src/document_loader.py
 
 run:
-	watchfiles ./src/app.py src rag-youtube.conf
+	# Web app removed - use test commands instead
+	python3 test/test_basic_functionality.py
 
 createdb:
 	@-rm -f rag-youtube.db > /dev/null 2>&1

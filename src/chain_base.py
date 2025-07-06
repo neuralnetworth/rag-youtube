@@ -17,6 +17,12 @@ class ChainParameters:
     self.document_count = int(overrides['document_count']) if 'document_count' in overrides else config.document_count()
     self.custom_prompts = utils.is_true(overrides['custom_prompts']) if 'custom_prompts' in overrides else config.custom_prompts()
     self.return_sources = utils.is_true(overrides['return_sources']) if 'return_sources' in overrides else config.return_sources()
+    
+    # Additional parameters needed by agent_qa_faiss
+    self.llm_retriever_compression = utils.is_true(overrides['llm_retriever_compression']) if 'llm_retriever_compression' in overrides else False
+    self.llm_retriever_multiquery = utils.is_true(overrides['llm_retriever_multiquery']) if 'llm_retriever_multiquery' in overrides else False
+    self.memory = overrides.get('memory', None)
+    self.memory_window_size = int(overrides['memory_window_size']) if 'memory_window_size' in overrides else 10
 
   def llm_model(self):
     return self.openai_model if self.llm == 'openai' else self.ollama_model
