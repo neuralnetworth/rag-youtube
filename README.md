@@ -208,3 +208,76 @@ pip install -r requirements.txt
 ```
 
 The migration script preserves all your computed embeddings, so you don't need to re-process your YouTube videos or pay for embeddings again.
+
+## Working with Multiple YouTube Channels
+
+This system can be used to create separate knowledge bases for different YouTube channels. The recommended approach is to use separate repository clones for each channel:
+
+### Approach: One Repository Clone per Channel
+
+```bash
+# Structure
+cline/
+├── rag-youtube-spotgamma/     # SpotGamma channel
+│   ├── videos.json
+│   ├── captions/
+│   ├── db/
+│   └── rag-youtube.conf
+├── rag-youtube-financechannel/  # Another finance channel
+│   ├── videos.json
+│   ├── captions/
+│   ├── db/
+│   └── rag-youtube.conf
+└── rag-youtube-educational/     # Educational content channel
+    ├── videos.json
+    ├── captions/
+    ├── db/
+    └── rag-youtube.conf
+```
+
+### Benefits of This Approach
+
+1. **Complete Isolation**: Each channel's data is completely separate
+2. **No Code Changes**: Works with the existing codebase as-is
+3. **Easy Management**: Delete a folder to remove a channel
+4. **Parallel Operation**: Run multiple channels on different ports simultaneously
+5. **Simple Backups**: Backup individual channel data independently
+
+### Setup Steps for Each Channel
+
+```bash
+# 1. Clone the repository with a channel-specific name
+git clone https://github.com/[your-fork]/rag-youtube.git rag-youtube-channelname
+
+# 2. Set up the channel
+cd rag-youtube-channelname
+cp .env.sample .env
+# Add your API keys
+
+# 3. Configure unique port (optional, for running multiple simultaneously)
+# Edit rag-youtube.conf and change the port number
+
+# 4. Process the channel
+./src/list_videos.py [VIDEO_ID_FROM_CHANNEL]
+./src/download_captions.py
+./src/document_loader.py
+
+# 5. Run the web interface
+./src/app.py
+```
+
+### Alternative: Single Repository with Multiple Databases
+
+If you prefer to use a single repository, you can manually manage different database directories:
+
+```bash
+# Set different db_persist_dir in rag-youtube.conf for each channel
+# Example: db_persist_dir=db_spotgamma
+
+# When switching channels:
+# 1. Update videos.json and channel_info.json
+# 2. Update db_persist_dir in config
+# 3. Captions will accumulate in captions/ folder (named by video ID)
+```
+
+However, the clone-per-channel approach is cleaner and recommended for most use cases.

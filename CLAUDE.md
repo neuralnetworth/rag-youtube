@@ -161,3 +161,50 @@ Use the provided migration script to preserve embeddings when switching:
 # Set embeddings model back to local model
 # Update db_persist_dir if needed
 ```
+
+## Working with Multiple YouTube Channels
+
+RAG-YouTube is designed to create knowledge bases from YouTube channels. To work with multiple channels separately, the recommended approach is to use separate repository clones.
+
+### Multi-Channel Architecture
+
+```
+workspace/
+├── rag-youtube-spotgamma/      # SpotGamma financial analysis
+├── rag-youtube-educational/    # Educational content
+└── rag-youtube-tech/          # Tech tutorials
+```
+
+Each instance:
+- Has its own video list, captions, and vector database
+- Can run on different ports simultaneously
+- Maintains complete data isolation
+- Can use different LLM/embedding configurations
+
+### Setting Up a New Channel
+
+```bash
+# 1. Clone with descriptive name
+git clone [repo-url] rag-youtube-channelname
+
+# 2. Configure the instance
+cd rag-youtube-channelname
+cp .env.sample .env
+# Edit .env with your API keys
+
+# 3. (Optional) Change port for parallel operation
+# Edit rag-youtube.conf: port=5556
+
+# 4. Process the channel
+./src/list_videos.py [VIDEO_ID]
+./src/download_captions.py  # This may take time for large channels
+./src/document_loader.py
+./src/app.py
+```
+
+### Important Notes
+
+- **Caption Download Time**: Downloading captions for hundreds of videos can take significant time (10+ minutes for 300+ videos)
+- **Storage**: Each channel's captions are saved permanently in `captions/` folder
+- **One-Time Investment**: Captions are downloaded once and reused; the script skips already-downloaded videos
+- **Video IDs**: Captions are saved by video ID, preventing conflicts even if mixed in one folder
