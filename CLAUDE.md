@@ -84,6 +84,11 @@ python3 test/test_suite.py
 make compare
 ```
 
+### Testing Approach
+- **Primary test**: ALWAYS run `python3 test/test_basic_functionality.py` first
+- **Focus on integration tests** - End-to-end RAG functionality is what matters
+- **Test failures in unit tests are often interface mismatches, not functional issues**
+
 ## Architecture
 
 ### Core Components
@@ -205,6 +210,12 @@ We've implemented a flexible model selection approach documented in `docs/model-
 - **Cost Optimization**: Use GPT-4.1 Mini for summarization tasks
 - **Future Experimentation**: Architecture supports multi-model pipelines
 
+### Model Selection Critical Rules
+- **NEVER use OpenAI o3 for RAG synthesis** - It's a reasoning model, not generative
+- **ALWAYS use GPT-4.1** (gpt-4.1-2025-04-14) for answer generation
+- **Parameter compatibility**: GPT-4.1 uses `max_tokens`, o3 uses `max_completion_tokens`
+- **Verify changes** with `test_basic_functionality.py` after model modifications
+
 ## Dual Setup Support
 
 This codebase supports two deployment modes:
@@ -306,3 +317,14 @@ The current Bottle + Vue.js web interface has significant compatibility issues w
 - **Core RAG**: Fully functional with command-line testing
 - **FastAPI Web Interface**: Ready for implementation using `docs/faiss-rag/`
 - **Test First**: Always run `python3 test/test_basic_functionality.py` to verify RAG functionality
+
+### Common Pitfalls to Avoid
+- ❌ Using o3 for RAG synthesis (returns empty responses)
+- ❌ Using Bottle.py (removed - use FastAPI)
+- ❌ Overly complex LangChain chain orchestration
+
+### How to Know It's Working
+- ✅ `test_basic_functionality.py` passes
+- ✅ Returns complete answers with sources
+- ✅ Sub-5-second response times
+- ✅ Relevant document retrieval
