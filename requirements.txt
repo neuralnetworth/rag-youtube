@@ -1,12 +1,16 @@
+# Core dependencies for OpenAI-based setup
 bottle
-chromadb
 tiktoken
 langchain
-langchain-community
 langchain-openai
-langchain-nomic
-sentence_transformers
 google-api-python-client
 requests
 openai
 yt_dlp
+
+# Vector database and local embeddings (commented out for OpenAI-only setup)
+# Uncomment these if switching to local/Ollama setup:
+# chromadb                 # Vector database storage - requires torch/CUDA
+# langchain-community      # Additional LangChain integrations
+# langchain-nomic          # Nomic embeddings provider
+# sentence_transformers    # Local HuggingFace embeddings - requires torch/CUDA

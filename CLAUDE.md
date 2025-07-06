@@ -9,8 +9,27 @@ RAG-YouTube is a Python-based RAG (Retrieval-Augmented Generation) application t
 ## Development Commands
 
 ### Setup and Installation
+
+#### Option 1: Lightweight OpenAI + FAISS Setup (No GPU Required)
 ```bash
+# Install only essential dependencies
 pip install -r requirements.txt
+
+# Configure for OpenAI in rag-youtube.conf:
+# llm=openai
+# openai_model=o3-2025-04-16
+# [Embeddings]
+# model=openai:text-embedding-3-small
+```
+
+#### Option 2: Full ChromaDB + Local Embeddings Setup (GPU Recommended)
+```bash
+# Uncomment ChromaDB dependencies in requirements.txt, then:
+pip install -r requirements.txt
+
+# Configure for local embeddings in rag-youtube.conf:
+# [Embeddings]
+# model=all-MiniLM-L6-v2
 ```
 
 ### Data Preparation
@@ -41,6 +60,9 @@ make createdb
 
 # Reset document loading (clears vector database)
 make load
+
+# Migrate from FAISS to ChromaDB (preserves embeddings)
+./src/migrate_faiss_to_chroma.py --source-dir db --target-dir db_chroma
 ```
 
 ### Testing and Benchmarking
@@ -54,7 +76,8 @@ make compare
 ### Core Components
 
 - **Agent System**: Modular agent architecture with base classes and specialized implementations
-  - `AgentBase`: Base functionality for all agents
+  - `AgentBase`: Base functionality for all agents (ChromaDB version)
+  - `agent_base_faiss.py`: Lightweight FAISS alternative for OpenAI-only setups
   - `AgentQA`: Question-answering agent with retrieval capabilities
   - `AgentEval`: Evaluation and benchmarking agent
 
@@ -111,3 +134,30 @@ make compare
 
 ### Configuration
 The system uses a hierarchical configuration approach where runtime parameters can override config file settings, enabling dynamic experimentation through the web interface.
+
+## Dual Setup Support
+
+This codebase supports two deployment modes:
+
+### 1. Lightweight Setup (CPU-friendly)
+- Uses OpenAI for both LLM and embeddings
+- FAISS for vector storage (no GPU required)
+- Minimal dependencies
+- Perfect for development/prototyping
+
+### 2. Full Setup (GPU-optimized)
+- ChromaDB for vector storage
+- Local embeddings (HuggingFace/Sentence Transformers)
+- Can use Ollama for local LLM
+- Better for production/privacy-sensitive deployments
+
+### Migration Between Setups
+Use the provided migration script to preserve embeddings when switching:
+```bash
+# From FAISS to ChromaDB (when moving to GPU machine)
+./src/migrate_faiss_to_chroma.py
+
+# Update config after migration
+# Set embeddings model back to local model
+# Update db_persist_dir if needed
+```

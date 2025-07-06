@@ -35,10 +35,40 @@ The following embeddings models are supported:
 
 ## Setup
 
-### Dependencies
+### Quick Start: Two Setup Options
 
-```
+#### Option 1: Lightweight OpenAI Setup (No GPU Required)
+Perfect for development, prototyping, or machines without NVIDIA GPUs.
+
+```bash
+# 1. Copy environment template
+cp .env.sample .env
+
+# 2. Add your API keys to .env:
+#    - GOOGLE_API_KEY for YouTube access
+#    - Configure OpenAI keys in rag-youtube.conf
+
+# 3. Install minimal dependencies
 pip install -r requirements.txt
+
+# 4. Configure for OpenAI (already done if using provided config)
+# In rag-youtube.conf:
+# llm=openai
+# openai_model=o3-2025-04-16  # or gpt-4, gpt-3.5-turbo
+# [Embeddings]
+# model=openai:text-embedding-3-small
+```
+
+#### Option 2: Full Local Setup (GPU Recommended)
+For production use, privacy-sensitive data, or cost optimization.
+
+```bash
+# 1. Uncomment ChromaDB dependencies in requirements.txt
+# 2. Install full dependencies
+pip install -r requirements.txt
+
+# 3. Install Ollama and pull models (if using Ollama)
+# 4. Configure for local embeddings in rag-youtube.conf
 ```
 
 ### Ollama
@@ -156,3 +186,25 @@ make createdb
 ```
 
 Then access [http://localhost:5555/dashboard.html](http://localhost:5555/dashboard.html).
+
+## Switching Between CPU and GPU Setups
+
+### Migrating from FAISS (CPU) to ChromaDB (GPU)
+
+When moving to a machine with GPU support:
+
+```bash
+# 1. Migrate existing embeddings (preserves your investment)
+./src/migrate_faiss_to_chroma.py --source-dir db --target-dir db_chroma
+
+# 2. Update dependencies in requirements.txt (uncomment ChromaDB lines)
+# 3. Install GPU dependencies
+pip install -r requirements.txt
+
+# 4. Update configuration
+# In rag-youtube.conf:
+# - Change embeddings model to local (e.g., all-MiniLM-L6-v2)
+# - Update db_persist_dir if using different directory
+```
+
+The migration script preserves all your computed embeddings, so you don't need to re-process your YouTube videos or pay for embeddings again.
