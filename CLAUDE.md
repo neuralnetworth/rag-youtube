@@ -159,23 +159,38 @@ python3 test/test_suite.py
 ## Development Notes
 
 ### File Structure
-- `src/`: Core Python modules with dual architecture (*_faiss.py for FAISS, standard files for ChromaDB)
-- `static/`: Future FastAPI web interface assets
-- `prompts/`: Customizable LLM prompts
-- `test/`: Comprehensive test suite with working integration tests
-- `docs/`: Documentation
-  - `faiss-rag/`: Complete FastAPI migration plan (design, features, implementation)
-  - `playlist/`: Playlist-aware filtering features
-  - `model-strategy.md`: Comprehensive model selection analysis and criteria
-- `captions/`: Downloaded video captions (created during setup)
-- `db/`: Vector database storage (created during setup)
-- `.env`: API keys configuration file
+```
+rag-youtube/
+├── src/                    # Core Python modules
+│   ├── *_faiss.py         # FAISS implementation (lightweight)
+│   ├── *.py               # ChromaDB implementation (full-featured)
+│   └── utils/             # Utility functions
+├── test/                   # Test suite
+│   ├── test_basic_functionality.py  # ✅ Main integration test
+│   ├── test_suite.py              # Legacy unit tests
+│   ├── test_ask.py               # Legacy web interface test
+│   └── test_summary.md           # Test status documentation
+├── docs/                   # Documentation
+│   ├── faiss-rag/         # FastAPI migration plan
+│   │   ├── faiss-design.md
+│   │   ├── faiss-feature.md
+│   │   └── faiss-implementation.md
+│   ├── playlist/          # Playlist features
+│   └── model-strategy.md  # Model selection analysis
+├── prompts/               # Customizable LLM prompts
+├── captions/              # Downloaded video captions (created during setup)
+├── db/                    # Vector database storage (created during setup)
+├── .env                   # API keys configuration
+├── rag-youtube.conf       # System configuration
+└── requirements.txt       # Dependencies (cleaned up)
+```
 
 ### Dependencies
 - Python 3.x with LangChain ecosystem
-- ChromaDB for vector storage
-- Bottle.py for web framework
+- OpenAI API for LLM and embeddings
+- FAISS for vector storage (CPU-optimized)
 - yt-dlp for video caption downloading
+- Optional: ChromaDB for GPU-optimized deployments
 - Optional: Ollama for local LLM inference
 
 ### Configuration
