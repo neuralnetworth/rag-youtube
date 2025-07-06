@@ -3,7 +3,7 @@ import os
 import sys
 import json
 import html
-from downloader import Downloader
+from data_pipeline.downloader import Downloader
 
 def main():
 

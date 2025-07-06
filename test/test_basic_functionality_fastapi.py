@@ -7,8 +7,8 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-import consts
-from config import Config
+from core import consts
+from core.config import Config
 from api.rag_engine import RAGEngine
 
 

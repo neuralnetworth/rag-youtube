@@ -1,7 +1,7 @@
 
 import time
 import json
-import consts
+from . import consts
 
 def now():
   return int(time.time() * 1000)

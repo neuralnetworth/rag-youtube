@@ -17,8 +17,8 @@ from sse_starlette.sse import EventSourceResponse
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from config import Config
-import consts
+from core.config import Config
+from core import consts
 from api.config_fastapi import FastAPIConfig
 from api.models import (
     QuestionRequest, AnswerResponse, StreamChunk,

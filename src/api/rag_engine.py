@@ -12,8 +12,8 @@ from openai import OpenAI, AsyncOpenAI
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from vector_store_faiss import FAISSVectorStore
-from config import Config
+from vector_stores.faiss import FAISSVectorStore
+from core.config import Config
 from api.models import Source
 
 

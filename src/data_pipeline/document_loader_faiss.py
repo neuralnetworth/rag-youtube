@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 import os
 import json
-import consts
-import utils
-from config import Config
-from agent_load import Loader
-from langchain_community.document_loaders import DirectoryLoader, TextLoader
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from core import consts
+from core import utils
+from core.config import Config
+from legacy.agents.load_faiss import LoaderFAISS
 
 def main():
 
   # init
   config = Config(consts.CONFIG_PATH)
-  loader = Loader(config)
-
-  # loader = DirectoryLoader('./captions', glob="./_*.cleaned.vtt", loader_cls=TextLoader)
-  # documents = loader.load()
-  # loader.add_documents(documents, {})
-  # return
+  loader = LoaderFAISS(config)
 
   # print config
   print(f'[loader] embeddings model = {config.embeddings_model()}')

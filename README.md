@@ -20,8 +20,12 @@ cp .env.sample .env
 # Edit .env: add GOOGLE_API_KEY and OPENAI_API_KEY
 
 # 4. Start the web interface
+# Linux/macOS:
 ./run_fastapi.sh
-# Or: uv run uvicorn src.api.main:app --reload
+# Windows PowerShell:
+uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+# Alternative (all platforms):
+uv run uvicorn src.api.main:app --reload
 
 # 5. Open http://localhost:8000 in your browser
 ```
@@ -44,15 +48,29 @@ cp .env.sample .env
 
 ```
 rag-youtube/
-├── src/                    # Core Python modules
-│   ├── api/               # ✅ FastAPI implementation
+├── src/                    # ✅ Organized Python modules
+│   ├── api/               # ✅ FastAPI implementation (production)
 │   │   ├── main.py        # FastAPI application
 │   │   ├── rag_engine.py  # Simplified RAG logic
 │   │   ├── models.py      # Pydantic schemas
 │   │   └── config_fastapi.py # API configuration
-│   ├── vector_store_faiss.py  # FAISS vector store
-│   ├── config.py          # System configuration
-│   └── [legacy files]     # ChromaDB and LangChain implementations
+│   ├── core/              # ✅ Shared utilities
+│   │   ├── config.py      # System configuration
+│   │   ├── consts.py      # Constants
+│   │   ├── utils.py       # Utility functions
+│   │   └── database.py    # Database operations
+│   ├── data_pipeline/     # ✅ Data ingestion scripts
+│   │   ├── list_videos.py # YouTube video discovery
+│   │   ├── download_captions.py # Caption downloading
+│   │   ├── downloader.py  # yt-dlp wrapper
+│   │   └── document_loader_faiss.py # FAISS loading
+│   ├── vector_stores/     # ✅ Vector store implementations
+│   │   ├── faiss.py       # FAISS vector store
+│   │   └── migrate_faiss_to_chroma.py # Migration utility
+│   └── legacy/            # Legacy LangChain implementations
+│       ├── agents/        # LangChain agents
+│       ├── chains/        # LangChain chains
+│       └── document_loader.py # ChromaDB loader
 ├── static/                # ✅ Web interface
 │   ├── index.html         # Main UI
 │   ├── style.css          # Styling
@@ -60,8 +78,8 @@ rag-youtube/
 ├── test/                  # Test suite
 │   ├── test_basic_functionality_fastapi.py  # ✅ FastAPI tests
 │   ├── test_fastapi.py    # API endpoint tests
-│   └── [other tests]      # Legacy test files
-├── docs/faiss-rag/        # Implementation documentation
+│   └── [legacy tests]     # LangChain test files
+├── docs/faiss-rag/        # ✅ Implementation documentation
 ├── captions/              # Downloaded video captions
 ├── db/                    # FAISS vector database
 ├── .env                   # API keys
@@ -176,11 +194,14 @@ Answer: In options trading, gamma is the "Greek" that measures...
 
 ### Starting the Server
 ```bash
-# Quick start
+# Linux/macOS (quick start):
 ./run_fastapi.sh
 
-# Or manually
+# Windows PowerShell:
 uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Alternative (all platforms):
+uv run uvicorn src.api.main:app --reload
 ```
 
 ### Access Points

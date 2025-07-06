@@ -1,5 +1,37 @@
 # Changelog
 
+## [v2.1.0] - 2025-01-06 - Source Code Reorganization ✅
+
+### 🗂️ Major Refactor: Organized Source Structure
+- **✅ Complete source reorganization** - Logical module separation
+- **✅ Production vs Legacy separation** - Clear distinction between current and deprecated code
+- **✅ Modular architecture** - Better organization for maintainability
+
+### 📁 New Directory Structure
+- **`src/api/`** - FastAPI implementation (production code)
+- **`src/core/`** - Shared utilities (config, consts, utils, database)
+- **`src/data_pipeline/`** - Data ingestion scripts (list_videos, download_captions, loaders)
+- **`src/vector_stores/`** - Vector store implementations (FAISS, migration tools)
+- **`src/legacy/`** - Legacy LangChain implementations (agents, chains)
+
+### 🔄 Import Updates
+- **Updated all imports** - Reflects new module organization
+- **Fixed relative imports** - Proper Python package structure
+- **Updated documentation** - Commands reference new paths
+- **Maintained compatibility** - All functionality preserved
+
+### 📖 Documentation Updates
+- **Updated README.md** - New repository structure documented
+- **Updated CLAUDE.md** - Commands updated for new paths
+- **Added src/README.md** - Import examples and organization guide
+
+### ✅ Benefits
+- **Clear separation** between production (FastAPI) and legacy (LangChain) code
+- **Logical grouping** of related functionality
+- **Easy navigation** through the codebase
+- **Future cleanup** - Easy to remove legacy/ when no longer needed
+- **Better maintainability** - Organized module structure
+
 ## [v2.0.0] - 2025-01-06 - FastAPI Implementation Complete ✅
 
 ### 🚀 Major Release: FastAPI Web Interface

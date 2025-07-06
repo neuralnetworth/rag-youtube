@@ -2,7 +2,7 @@
 import os
 import sys
 import json
-from downloader import Downloader
+from data_pipeline.downloader import Downloader
 from googleapiclient.discovery import build
 
 # Load .env file if it exists

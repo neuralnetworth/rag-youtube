@@ -1,6 +1,6 @@
 
-import utils
-import consts
+from . import utils
+from . import consts
 import configparser
 
 # config

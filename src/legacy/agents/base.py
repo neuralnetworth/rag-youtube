@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-import config
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+
+from core import config
 import requests
 import langchain
-from database import Database
-from chain_base import ChainParameters
+from core.database import Database
+from legacy.chains.base import ChainParameters
 from langchain_community.vectorstores import Chroma
 from langchain_core.language_models import BaseLanguageModel
 from langchain_community.embeddings import OpenAIEmbeddings, OllamaEmbeddings, HuggingFaceEmbeddings

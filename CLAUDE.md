@@ -38,23 +38,26 @@ uv sync --extra full
 ### Data Preparation
 ```bash
 # List videos from a YouTube channel (requires GOOGLE_API_KEY)
-GOOGLE_API_KEY=XXXX uv run python src/list_videos.py VIDEO_ID
+GOOGLE_API_KEY=XXXX uv run python src/data_pipeline/list_videos.py VIDEO_ID
 
 # Download captions for all videos
-uv run python src/download_captions.py
+uv run python src/data_pipeline/download_captions.py
 
 # Load documents into vector database
 # For FAISS setup:
-uv run python src/document_loader_faiss.py
+uv run python src/data_pipeline/document_loader_faiss.py
 # For ChromaDB setup:
-uv run python src/document_loader.py
+uv run python src/legacy/document_loader.py
 ```
 
 ### Running the Application
 ```bash
 # Start FastAPI web interface
+# Linux/macOS:
 ./run_fastapi.sh
-# OR
+# Windows PowerShell:
+uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+# Alternative (all platforms):
 uv run uvicorn src.api.main:app --reload
 
 # Access at http://localhost:8000
@@ -73,7 +76,7 @@ make createdb
 make load
 
 # Migrate from FAISS to ChromaDB (preserves embeddings)
-./src/migrate_faiss_to_chroma.py --source-dir db --target-dir db_chroma
+./src/vector_stores/migrate_faiss_to_chroma.py --source-dir db --target-dir db_chroma
 ```
 
 ### Testing and Validation
@@ -176,15 +179,29 @@ uv run python test/test_fastapi.py
 ### File Structure
 ```
 rag-youtube/
-├── src/                    # Core Python modules
-│   ├── api/               # ✅ FastAPI implementation
+├── src/                    # ✅ Organized Python modules
+│   ├── api/               # ✅ FastAPI implementation (production)
 │   │   ├── main.py        # FastAPI application
 │   │   ├── rag_engine.py  # Simplified RAG logic
 │   │   ├── models.py      # Pydantic schemas  
 │   │   └── config_fastapi.py # API configuration
-│   ├── vector_store_faiss.py  # FAISS vector store
-│   ├── config.py          # System configuration
-│   └── [legacy files]     # ChromaDB and LangChain implementations
+│   ├── core/              # ✅ Shared utilities
+│   │   ├── config.py      # System configuration
+│   │   ├── consts.py      # Constants
+│   │   ├── utils.py       # Utility functions
+│   │   └── database.py    # Database operations
+│   ├── data_pipeline/     # ✅ Data ingestion scripts
+│   │   ├── list_videos.py # YouTube video discovery
+│   │   ├── download_captions.py # Caption downloading
+│   │   ├── downloader.py  # yt-dlp wrapper
+│   │   └── document_loader_faiss.py # FAISS loading
+│   ├── vector_stores/     # ✅ Vector store implementations
+│   │   ├── faiss.py       # FAISS vector store
+│   │   └── migrate_faiss_to_chroma.py # Migration utility
+│   └── legacy/            # Legacy LangChain implementations
+│       ├── agents/        # LangChain agents
+│       ├── chains/        # LangChain chains
+│       └── document_loader.py # ChromaDB loader
 ├── static/                # ✅ Web interface
 │   ├── index.html         # Main UI
 │   ├── style.css          # Styling
@@ -247,7 +264,7 @@ This codebase supports two deployment modes:
 Use the provided migration script to preserve embeddings when switching:
 ```bash
 # From FAISS to ChromaDB (when moving to GPU machine)
-./src/migrate_faiss_to_chroma.py
+./src/vector_stores/migrate_faiss_to_chroma.py
 
 # Update config after migration
 # Set embeddings model back to local model
@@ -288,10 +305,10 @@ cp .env.sample .env
 # Edit rag-youtube.conf: port=5556
 
 # 4. Process the channel
-./src/list_videos.py [VIDEO_ID]
-./src/download_captions.py  # This may take time for large channels
-./src/document_loader.py
-./src/app.py
+./src/data_pipeline/list_videos.py [VIDEO_ID]
+./src/data_pipeline/download_captions.py  # This may take time for large channels
+./src/data_pipeline/document_loader_faiss.py
+./run_fastapi.sh
 ```
 
 ### Important Notes
