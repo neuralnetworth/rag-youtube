@@ -45,7 +45,7 @@ class AgentBase:
         print('[agent] building FAISS vector store with OpenAI embeddings')
         self.vectorstore = FAISSVectorStore(
             config=self.config,
-            persist_directory=self.config.db_persist_dir()
+            persist_directory=self.config.db_persist_directory()
         )
     
     def _build_retriever(self, parameters: ChainParameters):
