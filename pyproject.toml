@@ -1,0 +1,51 @@
+[project]
+name = "rag-youtube"
+version = "0.1.0"
+description = "RAG system for YouTube channel analysis using FAISS and OpenAI"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    # Core dependencies for OpenAI-based setup
+    "tiktoken",
+    "langchain",
+    "langchain-openai", 
+    "google-api-python-client",
+    "requests",
+    "openai",
+    "yt-dlp",
+    # FAISS for vector storage
+    "faiss-cpu",
+    # Additional utilities
+    "numpy",
+    "pandas",
+]
+
+[project.optional-dependencies]
+# Full setup with local embeddings and ChromaDB (GPU recommended)
+full = [
+    "chromadb",                 # Vector database storage - requires torch/CUDA
+    "langchain-community",      # Additional LangChain integrations  
+    "langchain-nomic",          # Nomic embeddings provider
+    "sentence-transformers",    # Local HuggingFace embeddings - requires torch/CUDA
+    "torch",                    # PyTorch for GPU acceleration
+]
+
+# Development dependencies
+dev = [
+    "pytest",
+    "black",
+    "isort",
+    "flake8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.isort]
+profile = "black"
+line_length = 88

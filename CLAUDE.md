@@ -12,8 +12,11 @@ RAG-YouTube is a Python-based RAG (Retrieval-Augmented Generation) application t
 
 #### Option 1: Lightweight OpenAI + FAISS Setup (No GPU Required)
 ```bash
-# Install only essential dependencies
-pip install -r requirements.txt
+# Install UV package manager first
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies and create virtual environment
+uv sync
 
 # Configure for OpenAI in rag-youtube.conf:
 # llm=openai
@@ -24,8 +27,8 @@ pip install -r requirements.txt
 
 #### Option 2: Full ChromaDB + Local Embeddings Setup (GPU Recommended)
 ```bash
-# Uncomment ChromaDB dependencies in requirements.txt, then:
-pip install -r requirements.txt
+# Install with full dependencies (includes ChromaDB, torch, etc.)
+uv sync --extra full
 
 # Configure for local embeddings in rag-youtube.conf:
 # [Embeddings]
@@ -35,16 +38,16 @@ pip install -r requirements.txt
 ### Data Preparation
 ```bash
 # List videos from a YouTube channel (requires GOOGLE_API_KEY)
-GOOGLE_API_KEY=XXXX ./src/list_videos.py VIDEO_ID
+GOOGLE_API_KEY=XXXX uv run python src/list_videos.py VIDEO_ID
 
 # Download captions for all videos
-./src/download_captions.py
+uv run python src/download_captions.py
 
 # Load documents into vector database
 # For FAISS setup:
-./src/document_loader_faiss.py
+uv run python src/document_loader_faiss.py
 # For ChromaDB setup:
-./src/document_loader.py
+uv run python src/document_loader.py
 ```
 
 ### Running the Application
@@ -146,13 +149,13 @@ make compare
 ### Known Working Commands
 ```bash
 # Quick functionality test
-python3 test/test_basic_functionality.py
+uv run python test/test_basic_functionality.py
 
 # Test vector search directly
-python3 test/test_minimal.py
+uv run python test/test_minimal.py
 
 # Run comprehensive test suite
-python3 test/test_suite.py
+uv run python test/test_suite.py
 ```
 
 ### Known Issues

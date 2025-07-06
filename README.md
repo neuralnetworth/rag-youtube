@@ -4,6 +4,25 @@ A RAG (Retrieval-Augmented Generation) system that builds searchable knowledge b
 
 ## 🚀 Quick Start
 
+### ⚡ Super Quick Setup (New Computer)
+
+```bash
+# 1. Install UV
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Clone and setup
+git clone [your-repo] rag-youtube-channelname
+cd rag-youtube-channelname
+uv sync
+
+# 3. Configure API keys
+cp .env.sample .env
+# Edit .env: add GOOGLE_API_KEY and OPENAI_API_KEY
+
+# 4. Test it works
+make test
+```
+
 ### Choose Your Setup
 
 **Option 1: Lightweight OpenAI + FAISS (Recommended for Prototyping)**
@@ -47,24 +66,28 @@ rag-youtube/
 
 ### Prerequisites
 
-1. **YouTube Data API Key**: Get from Google Developer Console
-2. **OpenAI API Key** (for Option 1) or **Ollama** (for Option 2)
+1. **UV Package Manager**: Install from https://docs.astral.sh/uv/
+2. **YouTube Data API Key**: Get from Google Developer Console
+3. **OpenAI API Key** (for Option 1) or **Ollama** (for Option 2)
 
 ### Option 1: Lightweight Setup (FAISS + OpenAI)
 
 ```bash
-# 1. Clone and configure
+# 1. Install UV (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Clone and configure
 git clone [your-repo] rag-youtube-channelname
 cd rag-youtube-channelname
 
-# 2. Install dependencies
-pip install -r requirements.txt
+# 3. Create virtual environment and install dependencies
+uv sync
 
-# 3. Configure API keys
+# 4. Configure API keys
 cp .env.sample .env
 # Edit .env: add GOOGLE_API_KEY and OPENAI_API_KEY
 
-# 4. Verify configuration
+# 5. Verify configuration
 # rag-youtube.conf should have:
 # llm=openai
 # openai_model=gpt-4.1-2025-04-14
@@ -75,15 +98,14 @@ cp .env.sample .env
 ### Option 2: Full Setup (ChromaDB + Local)
 
 ```bash
-# 1. Uncomment ChromaDB dependencies in requirements.txt
-# 2. Install with GPU support
-pip install -r requirements.txt
+# 1. Install with full dependencies (GPU support)
+uv sync --extra full
 
-# 3. Install Ollama (optional)
+# 2. Install Ollama (optional)
 # Download from ollama.ai and pull models
 ollama pull mistral:latest
 
-# 4. Configure for local embeddings
+# 3. Configure for local embeddings
 # Edit rag-youtube.conf:
 # [Embeddings]
 # model=all-MiniLM-L6-v2
@@ -95,24 +117,24 @@ ollama pull mistral:latest
 
 ```bash
 # Get channel video list (using any video ID from the channel)
-GOOGLE_API_KEY=your_key ./src/list_videos.py VIDEO_ID_FROM_CHANNEL
+GOOGLE_API_KEY=your_key uv run python src/list_videos.py VIDEO_ID_FROM_CHANNEL
 ```
 
 ### 2. Download Captions
 
 ```bash
 # Download all video captions (may take 10+ minutes for large channels)
-./src/download_captions.py
+uv run python src/download_captions.py
 ```
 
 ### 3. Load Into Vector Database
 
 ```bash
 # For FAISS setup
-./src/document_loader_faiss.py
+uv run python src/document_loader_faiss.py
 
 # For ChromaDB setup  
-./src/document_loader.py
+uv run python src/document_loader.py
 ```
 
 ## 🧪 Testing Your Setup
@@ -121,13 +143,13 @@ GOOGLE_API_KEY=your_key ./src/list_videos.py VIDEO_ID_FROM_CHANNEL
 
 ```bash
 # Test basic functionality (recommended first test)
-python3 test/test_basic_functionality.py
+uv run python test/test_basic_functionality.py
 
 # Run minimal vector search test
-python3 test/test_minimal.py
+uv run python test/test_minimal.py
 
 # Run comprehensive test suite
-python3 test/test_suite.py
+uv run python test/test_suite.py
 ```
 
 ### Expected Test Output
@@ -148,10 +170,11 @@ Answer: In options trading, gamma is the "Greek" that measures...
 **For Now**: Use the command-line interface for testing:
 ```bash
 # Test basic functionality
-python3 test/test_basic_functionality.py
+uv run python test/test_basic_functionality.py
 
-# Run interactive queries (planned)
-# python3 src/cli.py
+# Or activate environment and use directly
+uv shell
+python test/test_basic_functionality.py
 ```
 
 **Future**: See `docs/faiss-rag/` for the complete FastAPI implementation plan.
