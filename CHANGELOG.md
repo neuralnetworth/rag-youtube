@@ -2,6 +2,16 @@
 
 ## [Current] - 2025-01-06
 
+### 📚 Documentation Updates
+- **Created FastAPI Migration Plan** in `docs/faiss-rag/`
+  - `faiss-design.md` - Complete system architecture with async support
+  - `faiss-feature.md` - Detailed feature specifications and UI mockups
+  - `faiss-implementation.md` - Step-by-step implementation guide with code examples
+- **Reorganized Documentation** 
+  - Moved model strategy to `docs/model-strategy.md`
+  - Organized playlist features in `docs/playlist/`
+  - Updated README.md and CLAUDE.md with current status
+
 ### 🔧 Configuration Updates
 - **Switched from o3 to GPT-4.1** (`gpt-4.1-2025-04-14`)
   - o3 is a reasoning model, not optimal for RAG synthesis tasks
@@ -14,7 +24,7 @@
 - **341 videos** discovered from SpotGamma YouTube channel
 - **192 videos with captions** successfully downloaded and processed
 - **2,413 document chunks** indexed in FAISS vector store
-- **Basic Q&A functionality** working with OpenAI o3 model
+- **Basic Q&A functionality** working with OpenAI GPT-4.1 model
 
 #### Dual Architecture Support
 - **FAISS Vector Store** (`vector_store_faiss.py`) - CPU-optimized for prototyping

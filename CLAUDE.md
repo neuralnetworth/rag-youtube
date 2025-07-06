@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 # Configure for OpenAI in rag-youtube.conf:
 # llm=openai
-# openai_model=o3-2025-04-16
+# openai_model=gpt-4.1-2025-04-14
 # [Embeddings]
 # model=openai:text-embedding-3-small
 ```
@@ -136,7 +136,7 @@ make compare
 - ✅ **341 SpotGamma videos** listed from channel
 - ✅ **192 videos with captions** downloaded and processed
 - ✅ **2,413 document chunks** indexed in FAISS vector store
-- ✅ **OpenAI o3 integration** working (with temperature constraints)
+- ✅ **OpenAI GPT-4.1 integration** working (switched from o3 for better RAG performance)
 - ✅ **Basic Q&A pipeline** functional with source attribution
 - ✅ **Test suite** covering vector store, agent QA, and end-to-end functionality
 
@@ -153,9 +153,10 @@ python3 test/test_minimal.py
 ```
 
 ### Known Issues
-- **OpenAI o3 constraints**: No temperature parameter support, some empty responses
+- **RESOLVED: OpenAI o3 issues**: Fixed by switching to GPT-4.1 model (gpt-4.1-2025-04-14)
+- **Web Interface**: Current Bottle + Vue.js setup has compatibility issues with LangChain
 - **Chain interface mismatches**: `run()` vs `invoke()` method inconsistencies between FAISS and ChromaDB agents
-- **Parameter naming conflicts**: `chain` vs `chain_type` in different implementations
+- **Solution in Progress**: Complete FastAPI rewrite documented in `docs/faiss-rag/`
 
 ## Development Notes
 
@@ -164,7 +165,10 @@ python3 test/test_minimal.py
 - `public/`: Web interface assets (HTML, CSS, JS)
 - `prompts/`: Customizable LLM prompts
 - `test/`: Comprehensive test suite with working integration tests
-- `docs/`: Feature planning and design documentation
+- `docs/`: Documentation
+  - `faiss-rag/`: Complete FastAPI migration plan (design, features, implementation)
+  - `playlist/`: Playlist-aware filtering features
+  - `model-strategy.md`: Comprehensive model selection analysis and criteria
 - `captions/`: Downloaded video captions (created during setup)
 - `db/`: Vector database storage (created during setup)
 - `.env`: API keys configuration file
@@ -178,6 +182,15 @@ python3 test/test_minimal.py
 
 ### Configuration
 The system uses a hierarchical configuration approach where runtime parameters can override config file settings, enabling dynamic experimentation through the web interface.
+
+### Model Selection Strategy
+We've implemented a flexible model selection approach documented in `docs/model-strategy.md`:
+
+- **Current Setup**: OpenAI GPT-4.1 for RAG synthesis tasks (switched from o3)
+- **Reasoning Models**: Use o3 for complex analysis and verification tasks
+- **Generative Models**: Use GPT-4.1 for answer synthesis from retrieved content
+- **Cost Optimization**: Use GPT-4.1 Mini for summarization tasks
+- **Future Experimentation**: Architecture supports multi-model pipelines
 
 ## Dual Setup Support
 
@@ -252,3 +265,31 @@ cp .env.sample .env
 - **Storage**: Each channel's captions are saved permanently in `captions/` folder
 - **One-Time Investment**: Captions are downloaded once and reused; the script skips already-downloaded videos
 - **Video IDs**: Captions are saved by video ID, preventing conflicts even if mixed in one folder
+
+## FastAPI Migration Plan
+
+The current Bottle + Vue.js web interface has significant compatibility issues with LangChain and modern async patterns. A complete rewrite using FastAPI is documented in `docs/faiss-rag/`:
+
+### Migration Overview
+1. **Read the documentation first**:
+   - `docs/faiss-rag/faiss-design.md` - System architecture and technology decisions
+   - `docs/faiss-rag/faiss-feature.md` - Feature specifications and UI mockups
+   - `docs/faiss-rag/faiss-implementation.md` - Complete implementation guide with code
+
+2. **Key improvements**:
+   - Native async/await support for better performance
+   - Direct FAISS integration without complex LangChain chains
+   - Simple vanilla JavaScript frontend (no Vue.js complexity)
+   - Proper error handling and streaming responses
+   - Clean separation of concerns
+
+3. **Implementation approach**:
+   - Start with `src/rag_engine.py` for core RAG logic
+   - Implement `src/main.py` with FastAPI endpoints
+   - Create simple HTML/JS frontend in `static/`
+   - Reuse existing FAISS index and metadata
+
+### When to use which setup
+- **Current Bottle setup**: Only for testing the existing system
+- **FastAPI setup**: For all new development and production use
+- **Test basic functionality first**: Always run `python3 test/test_basic_functionality.py` before web development

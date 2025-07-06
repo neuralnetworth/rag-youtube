@@ -34,7 +34,9 @@ rag-youtube/
 │   └── README.md                  # Test documentation
 ├── public/               # Web interface (HTML, CSS, JS)
 ├── prompts/             # Customizable LLM prompts
-├── docs/                # Feature planning and documentation
+├── docs/                # Documentation
+│   ├── faiss-rag/      # FastAPI migration plans
+│   └── playlist/       # Playlist features
 ├── captions/           # Downloaded video captions (created on first run)
 ├── db/                 # Vector database storage (created on first run)
 ├── .env                # API keys configuration
@@ -65,7 +67,7 @@ cp .env.sample .env
 # 4. Verify configuration
 # rag-youtube.conf should have:
 # llm=openai
-# openai_model=o3-2025-04-16
+# openai_model=gpt-4.1-2025-04-14
 # [Embeddings]
 # model=openai:text-embedding-3-small
 ```
@@ -176,7 +178,7 @@ Key configuration options in `rag-youtube.conf`:
 ```ini
 [General]
 llm=openai                    # ollama, openai
-openai_model=o3-2025-04-16   # or gpt-4, gpt-3.5-turbo
+openai_model=gpt-4.1-2025-04-14   # GPT-4.1 recommended for RAG
 port=5555                    # Web interface port
 
 [Embeddings]
@@ -187,6 +189,14 @@ search_type=similarity       # similarity, mmr, similarity_score_threshold
 document_count=5            # Number of documents to retrieve
 chunk_size=1000            # Text chunk size for processing
 ```
+
+### Model Selection Strategy
+
+We switched from OpenAI o3 to GPT-4.1 for RAG synthesis tasks. The o3 model is optimized for complex reasoning but not ideal for generating conversational responses from retrieved content.
+
+- **Current Choice**: GPT-4.1 for reliable answer generation from document context
+- **Future Flexibility**: Architecture supports experimenting with different models for different pipeline stages
+- **Comprehensive Analysis**: See `docs/model-strategy.md` for detailed model comparison and selection criteria
 
 ## 🔄 Migration Between Setups
 
@@ -205,15 +215,19 @@ Move from CPU (FAISS) to GPU (ChromaDB) setup:
 ### ✅ Working Features
 - **SpotGamma Channel**: 341 videos processed, 192 with captions loaded
 - **FAISS Vector Store**: 2,413 document chunks indexed
-- **OpenAI Integration**: Q&A with o3 model working
+- **OpenAI Integration**: Q&A with GPT-4.1 model working (fixed o3 issues)
 - **Basic RAG Pipeline**: Question answering with source attribution
 - **Test Suite**: Comprehensive testing framework
 - **Dual Architecture**: CPU (FAISS) and GPU (ChromaDB) support
 
 ### 🔄 In Development
-- **Playlist-Aware Filtering**: Enhanced content organization (see docs/)
-- **Advanced Chain Types**: Conversational memory and compression
-- **Performance Optimization**: Caching and response speed improvements
+- **FastAPI Migration**: Moving from Bottle to FastAPI for better async support (see docs/faiss-rag/)
+- **Playlist-Aware Filtering**: Enhanced content organization (see docs/playlist/)
+- **Simplified Architecture**: Removing complex LangChain chains for direct API calls
+
+### ⚠️ Known Issues
+- **Current Web Interface**: Bottle + Vue.js setup has compatibility issues
+- **Solution**: Complete FastAPI rewrite documented in docs/faiss-rag/
 
 ### 📋 Example Queries
 - "What is gamma in options trading?"
@@ -231,8 +245,13 @@ Move from CPU (FAISS) to GPU (ChromaDB) setup:
 ## 📚 Learn More
 
 - **Test Documentation**: See `test/README.md`
-- **Feature Planning**: See `docs/` folder for future enhancements
-- **Configuration Details**: See `CLAUDE.md` for development guidance
+- **FastAPI Migration**: See `docs/faiss-rag/` for the complete rewrite plan
+  - `faiss-design.md` - System architecture
+  - `faiss-feature.md` - Feature specifications
+  - `faiss-implementation.md` - Step-by-step implementation guide
+- **Model Selection**: See `docs/model-strategy.md` for comprehensive model comparison and selection criteria
+- **Playlist Features**: See `docs/playlist/` for content organization plans
+- **Development Guide**: See `CLAUDE.md` for Claude-specific instructions
 
 ---
 
