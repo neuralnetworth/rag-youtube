@@ -4,7 +4,7 @@ Simple test for FAISS RAG system.
 """
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 import consts
 from config import Config

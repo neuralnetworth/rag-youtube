@@ -1,5 +1,10 @@
 # Playlist-Aware RAG Feature Specification
 
+> **Status**: 🔄 **Planning Phase** - Future enhancement not yet implemented
+> 
+> **Current System**: Basic RAG with SpotGamma channel data working
+> **This Document**: Feature specification for planned playlist filtering capabilities
+
 ## Overview
 
 This feature enhances RAG-YouTube to support playlist-based organization and retrieval, enabling users to query specific playlists or use playlist metadata to improve search relevance. This is particularly valuable for channels that organize content into thematic playlists.

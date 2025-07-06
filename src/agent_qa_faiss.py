@@ -48,19 +48,19 @@ class AgentQA(AgentBase):
       retriever = self._build_multiquery_retriever(retriever, callback)
 
     # eval
-    if parameters.chain == 'qa_sources' or (parameters.chain is None and parameters.memory is None):
+    if parameters.chain_type == 'qa_sources' or (parameters.chain_type is None and parameters.memory is None):
       chain = QAChainBaseWithSources(self.llm, retriever, callback, self.config)
       response = chain.run(parameters)
-    elif parameters.chain == 'qa_basic' or (parameters.chain is None and parameters.memory):
+    elif parameters.chain_type == 'qa_basic' or (parameters.chain_type is None and parameters.memory):
       chain = QAChainBase(self.llm, retriever, callback, self.config)
       memory = self._build_memory(parameters.memory, parameters.memory_window_size)
       response = chain.run(parameters, memory)
-    elif parameters.chain == 'qa_conversational':
+    elif parameters.chain_type == 'qa_conversational':
       chain = QAChainConversational(self.llm, retriever, callback, self.config)
       memory = self._build_memory(parameters.memory, parameters.memory_window_size)
       response = chain.run(parameters, memory)
     else:
-      raise ValueError(f'Unknown chain: {parameters.chain}')
+      raise ValueError(f'Unknown chain: {parameters.chain_type}')
 
     # make URLs clickable
     if response['answer']:

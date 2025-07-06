@@ -1,8 +1,15 @@
 # Playlist-Aware RAG Implementation Guide
 
+> **Status**: 🔄 **Planning Phase** - Implementation roadmap for future development
+> 
+> **Current System**: Basic RAG pipeline functional with SpotGamma data
+> **This Document**: Step-by-step implementation plan for playlist features
+
 ## Overview
 
-This guide provides step-by-step instructions for implementing playlist support in RAG-YouTube, with specific paths for both FAISS (CPU) and ChromaDB (GPU) setups.
+This guide provides a step-by-step implementation roadmap for adding playlist support to RAG-YouTube, with specific paths for both FAISS (CPU) and ChromaDB (GPU) setups.
+
+**Prerequisites**: The current basic RAG system should be working before implementing these enhancements.
 
 ## Implementation Phases
 

@@ -41,13 +41,19 @@ GOOGLE_API_KEY=XXXX ./src/list_videos.py VIDEO_ID
 ./src/download_captions.py
 
 # Load documents into vector database
+# For FAISS setup:
+./src/document_loader_faiss.py
+# For ChromaDB setup:
 ./src/document_loader.py
 ```
 
 ### Running the Application
 ```bash
-# Start the web server
-./src/app.py
+# For FAISS setup:
+python3 src/app_faiss.py
+
+# For ChromaDB setup:
+python3 src/app.py
 
 # Development with auto-reload
 make run
@@ -65,8 +71,17 @@ make load
 ./src/migrate_faiss_to_chroma.py --source-dir db --target-dir db_chroma
 ```
 
-### Testing and Benchmarking
+### Testing and Validation
 ```bash
+# Test basic RAG functionality (recommended first test)
+python3 test/test_basic_functionality.py
+
+# Run minimal vector search test
+python3 test/test_minimal.py
+
+# Run comprehensive test suite
+python3 test/test_suite.py
+
 # Run benchmarks comparing different configurations
 make compare
 ```
@@ -115,15 +130,44 @@ make compare
 - **Evaluation**: Built-in benchmarking and comparison tools
 - **Monitoring**: Dashboard for analyzing processing chains and performance
 
+## Current Working State
+
+### SpotGamma Implementation Status
+- ✅ **341 SpotGamma videos** listed from channel
+- ✅ **192 videos with captions** downloaded and processed
+- ✅ **2,413 document chunks** indexed in FAISS vector store
+- ✅ **OpenAI o3 integration** working (with temperature constraints)
+- ✅ **Basic Q&A pipeline** functional with source attribution
+- ✅ **Test suite** covering vector store, agent QA, and end-to-end functionality
+
+### Known Working Commands
+```bash
+# Quick functionality test
+python3 test/test_basic_functionality.py
+
+# Start FAISS-based web app
+python3 src/app_faiss.py
+
+# Test vector search directly
+python3 test/test_minimal.py
+```
+
+### Known Issues
+- **OpenAI o3 constraints**: No temperature parameter support, some empty responses
+- **Chain interface mismatches**: `run()` vs `invoke()` method inconsistencies between FAISS and ChromaDB agents
+- **Parameter naming conflicts**: `chain` vs `chain_type` in different implementations
+
 ## Development Notes
 
 ### File Structure
-- `src/`: Core Python modules
+- `src/`: Core Python modules with dual architecture (*_faiss.py for FAISS, standard files for ChromaDB)
 - `public/`: Web interface assets (HTML, CSS, JS)
 - `prompts/`: Customizable LLM prompts
-- `test/`: Benchmarking and evaluation scripts
+- `test/`: Comprehensive test suite with working integration tests
+- `docs/`: Feature planning and design documentation
 - `captions/`: Downloaded video captions (created during setup)
 - `db/`: Vector database storage (created during setup)
+- `.env`: API keys configuration file
 
 ### Dependencies
 - Python 3.x with LangChain ecosystem

@@ -1,8 +1,15 @@
 # Playlist-Aware RAG Technical Design
 
+> **Status**: 🔄 **Planning Phase** - Future enhancement not yet implemented
+> 
+> **Current System**: Basic RAG with video-level retrieval working
+> **This Document**: Technical design for planned playlist filtering features
+
 ## Architecture Overview
 
-This design introduces playlist support while maintaining compatibility with both FAISS (CPU-optimized) and ChromaDB (GPU-optimized) vector stores. The architecture emphasizes minimal changes to existing code while adding powerful filtering capabilities.
+This design document outlines how to introduce playlist support while maintaining compatibility with both FAISS (CPU-optimized) and ChromaDB (GPU-optimized) vector stores. The architecture emphasizes minimal changes to existing code while adding powerful filtering capabilities.
+
+**Note**: This is a planning document. The current working system provides basic RAG functionality without playlist filtering.
 
 ## System Architecture
 
