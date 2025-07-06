@@ -5,6 +5,19 @@ import json
 from downloader import Downloader
 from googleapiclient.discovery import build
 
+# Load .env file if it exists
+def load_env():
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key] = value
+
+load_env()
+
 def get_channel_info(api_key, channel_id):
   print(f'[youtube] Getting channel info for {channel_id}...')
   youtube = build('youtube', 'v3', developerKey=api_key)
