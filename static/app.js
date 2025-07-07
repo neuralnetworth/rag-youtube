@@ -14,6 +14,7 @@ const sourcesList = document.getElementById('sources-list');
 const processingTime = document.getElementById('processing-time');
 const examplesSection = document.getElementById('examples-section');
 const statsContainer = document.getElementById('stats-docs');
+const darkModeToggle = document.getElementById('dark-mode-toggle');
 
 // State
 let isProcessing = false;
@@ -23,6 +24,7 @@ let currentEventSource = null;
 document.addEventListener('DOMContentLoaded', () => {
     loadStats();
     setupEventListeners();
+    initDarkMode();
 });
 
 // Load system stats
@@ -39,6 +41,7 @@ async function loadStats() {
 // Setup event listeners
 function setupEventListeners() {
     questionForm.addEventListener('submit', handleSubmit);
+    darkModeToggle.addEventListener('click', toggleDarkMode);
     
     // Example questions
     document.querySelectorAll('.example-link').forEach(link => {
@@ -104,8 +107,8 @@ async function askQuestion(question, numSources) {
     
     const data = await response.json();
     
-    // Display answer
-    answerContent.textContent = data.answer;
+    // Display answer with markdown rendering
+    answerContent.innerHTML = marked.parse(data.answer);
     
     // Display sources
     displaySources(data.sources);
@@ -174,7 +177,7 @@ async function askQuestionStream(question, numSources) {
                             
                         case 'token':
                             answerText += data.content;
-                            answerContent.textContent = answerText;
+                            answerContent.innerHTML = marked.parse(answerText);
                             break;
                             
                         case 'done':
@@ -246,7 +249,7 @@ function showResults() {
 }
 
 function clearResults() {
-    answerContent.textContent = 'Thinking...';
+    answerContent.innerHTML = '<em>Thinking...</em>';
     sourcesList.innerHTML = '';
     processingTime.textContent = '';
 }
@@ -257,4 +260,40 @@ function showError(message) {
     setTimeout(() => {
         answerContent.style.color = '';
     }, 3000);
+}
+
+// Dark Mode Functions
+function initDarkMode() {
+    // Check for saved theme preference or default to light mode
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme) {
+        setTheme(savedTheme);
+    } else if (prefersDark) {
+        setTheme('dark');
+    } else {
+        setTheme('light');
+    }
+}
+
+function toggleDarkMode() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    
+    // Update toggle icon
+    const toggleIcon = darkModeToggle.querySelector('.toggle-icon');
+    if (theme === 'dark') {
+        toggleIcon.textContent = '☀️';
+        darkModeToggle.setAttribute('title', 'Switch to light mode');
+    } else {
+        toggleIcon.textContent = '🌙';
+        darkModeToggle.setAttribute('title', 'Switch to dark mode');
+    }
 }

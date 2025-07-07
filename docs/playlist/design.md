@@ -1,29 +1,37 @@
-# Playlist-Aware RAG Technical Design
+# Unified Content Analysis & Organization Technical Design
 
 > **Status**: 🔄 **Planning Phase** - Future enhancement not yet implemented
 > 
-> **Current System**: Basic RAG with video-level retrieval working
-> **This Document**: Technical design for planned playlist filtering features
+> **Current System**: Basic RAG with video-level retrieval working (192/341 videos with captions)
+> **This Document**: Technical design for unified content analysis combining caption quality, playlist organization, and content intelligence
 
 ## Architecture Overview
 
-This design document outlines how to introduce playlist support while maintaining compatibility with both FAISS (CPU-optimized) and ChromaDB (GPU-optimized) vector stores. The architecture emphasizes minimal changes to existing code while adding powerful filtering capabilities.
+This design document outlines a unified content analysis system that comprehensively analyzes YouTube channel content across multiple dimensions - caption quality, playlist organization, temporal patterns, and content categories. This unified approach provides a complete content intelligence layer for enhanced RAG retrieval.
 
-**Note**: This is a planning document. The current working system provides basic RAG functionality without playlist filtering.
+**Core Principle**: Single analysis pass that captures all content dimensions, enabling intelligent filtering and retrieval based on quality, organization, and content type.
+
+**Note**: This is a planning document. The current working system provides basic RAG functionality with 192 captioned videos out of 341 total videos.
 
 ## System Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   YouTube API   │────▶│  Playlist Cache  │────▶│  Vector Store   │
-│  (videos.json)  │     │(playlists.json) │     │ (FAISS/Chroma) │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-                                │                          │
-                                ▼                          ▼
-                        ┌───────────────┐         ┌───────────────┐
-                        │Metadata Store │         │   Retriever   │
-                        │   (SQLite)    │         │  + Filtering  │
-                        └───────────────┘         └───────────────┘
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   YouTube API   │────▶│ Unified Content │────▶│  Vector Store   │
+│  (videos.json)  │     │    Analyzer     │     │ (FAISS/Chroma) │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+         │                       │                          │
+         │                       ▼                          ▼
+         │              ┌───────────────┐         ┌───────────────┐
+         └─────────────▶│Content Intel  │────────▶│ Smart Retriever│
+                        │   Database    │         │   + Filters    │
+                        │   (SQLite)    │         └───────────────┘
+                        └───────────────┘
+
+Components:
+- Unified Content Analyzer: Single-pass analysis of captions, playlists, metadata
+- Content Intel Database: Comprehensive storage of all content dimensions
+- Smart Retriever: Multi-dimensional filtering and quality-aware ranking
 ```
 
 ## Data Model
@@ -44,139 +52,455 @@ This design document outlines how to introduce playlist support while maintainin
 {
   "source": "video_id",
   "title": "Video Title",
-  "url": "https://youtube.com/watch?v=..."
+  "url": "https://youtube.com/watch?v=...",
+  "has_captions": false  # Currently missing for 149/341 videos
 }
 ```
 
-### Enhanced Data Model
+### Unified Content Intelligence Model
 ```python
-# playlists.json
+# content_analysis.json - Single unified analysis output
 {
-  "playlists": [
-    {
-      "id": "PLxxxxxx",
-      "title": "Options Education Series",
-      "description": "Learn options trading",
-      "itemCount": 30,
-      "videos": ["videoId1", "videoId2", ...]
+  "analysis_timestamp": "2024-01-15T10:30:00Z",
+  "channel_stats": {
+    "total_videos": 341,
+    "captioned_videos": 192,
+    "playlist_count": 12,
+    "date_range": ["2023-01-01", "2024-01-15"]
+  },
+  "videos": {
+    "videoId1": {
+      # Core metadata
+      "title": "Understanding Options Greeks",
+      "published_at": "2024-01-01T00:00:00Z",
+      "duration": 1235,  # seconds
+      
+      # Caption analysis
+      "caption_status": {
+        "available": true,
+        "source": "cleaned",  # original, cleaned, auto-generated, none
+        "quality_score": 0.85,  # 0-1 scale
+        "quality_factors": {
+          "completeness": 0.95,  # timestamp coverage
+          "technical_accuracy": 0.80,  # domain terms present
+          "formatting": 0.75,  # speaker labels, punctuation
+          "confidence": 0.90  # if auto-generated
+        },
+        "word_count": 1523,
+        "technical_terms": ["delta", "gamma", "theta", "vega"]
+      },
+      
+      # Content intelligence
+      "content_analysis": {
+        "primary_category": "educational",
+        "subcategory": "options_basics",
+        "topics": ["greeks", "risk_management"],
+        "complexity_level": "intermediate",
+        "temporal_relevance": "evergreen",  # vs time-sensitive
+        "engagement_potential": "high"
+      },
+      
+      # Organizational context
+      "playlist_membership": [
+        {
+          "id": "PLxxxxxx",
+          "title": "Options Education Series",
+          "position": 5,
+          "playlist_category": "educational"
+        }
+      ],
+      
+      # Publishing patterns
+      "publishing_context": {
+        "day_of_week": "monday",
+        "time_of_day": "morning",
+        "series_position": 5,  # if part of series
+        "related_videos": ["videoId2", "videoId3"]
+      }
     }
-  ],
-  "video_playlists": {
-    "videoId1": ["PLxxxxxx", "PLyyyyyy"],
-    "videoId2": ["PLxxxxxx"]
+  },
+  
+  # Aggregated insights
+  "content_insights": {
+    "caption_coverage_by_category": {
+      "educational": {"total": 80, "captioned": 75, "avg_quality": 0.82},
+      "daily_update": {"total": 200, "captioned": 90, "avg_quality": 0.65},
+      "interview": {"total": 41, "captioned": 27, "avg_quality": 0.71}
+    },
+    "playlist_quality_correlation": {
+      "high_quality_playlists": ["PLxxxxxx", "PLyyyyyy"],
+      "needs_improvement": ["PLzzzzzz"]
+    },
+    "temporal_patterns": {
+      "best_caption_coverage": "monday_wednesday",
+      "content_gaps": "weekend_content"
+    }
   }
 }
-
-# Enhanced Vector Store Metadata
-{
-  "source": "video_id",
-  "title": "Video Title",
-  "url": "https://youtube.com/watch?v=...",
-  "playlist_ids": ["PLxxxxxx", "PLyyyyyy"],
-  "playlist_titles": ["Options Education", "Advanced Topics"],
-  "published_at": "2024-01-01T00:00:00Z"
-}
 ```
 
-### SQLite Schema (For FAISS Metadata)
+### SQLite Schema (Unified Content Intelligence)
 ```sql
--- Playlists table
-CREATE TABLE playlists (
+-- Core video intelligence table
+CREATE TABLE video_intelligence (
+    video_id VARCHAR(32) PRIMARY KEY,
+    title TEXT NOT NULL,
+    published_at DATETIME,
+    duration INTEGER,
+    
+    -- Caption intelligence
+    has_captions BOOLEAN DEFAULT FALSE,
+    caption_source VARCHAR(20), -- original, cleaned, auto-generated, none
+    caption_quality_score REAL, -- 0.0 to 1.0
+    caption_completeness REAL,
+    caption_technical_accuracy REAL,
+    caption_word_count INTEGER,
+    
+    -- Content classification
+    primary_category VARCHAR(50), -- educational, daily_update, interview
+    subcategory VARCHAR(50), -- options_basics, market_analysis, etc
+    complexity_level VARCHAR(20), -- beginner, intermediate, advanced
+    temporal_relevance VARCHAR(20), -- evergreen, time-sensitive, dated
+    
+    -- Publishing patterns
+    day_of_week VARCHAR(10),
+    time_of_day VARCHAR(20),
+    
+    -- Analysis metadata
+    analyzed_at DATETIME,
+    analysis_version VARCHAR(10)
+);
+
+-- Playlist intelligence
+CREATE TABLE playlist_intelligence (
     id VARCHAR(32) PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
-    published_at DATETIME,
-    item_count INTEGER,
-    channel_id VARCHAR(32)
+    category VARCHAR(50),
+    avg_caption_quality REAL,
+    caption_coverage REAL,
+    total_duration INTEGER,
+    coherence_score REAL -- how well videos fit together
 );
 
--- Video-Playlist mapping
-CREATE TABLE video_playlists (
+-- Enhanced video-playlist mapping with context
+CREATE TABLE video_playlist_context (
     video_id VARCHAR(32),
     playlist_id VARCHAR(32),
     position INTEGER,
-    added_at DATETIME,
+    relevance_score REAL, -- how well video fits playlist theme
     PRIMARY KEY (video_id, playlist_id),
-    FOREIGN KEY (playlist_id) REFERENCES playlists(id)
+    FOREIGN KEY (video_id) REFERENCES video_intelligence(video_id),
+    FOREIGN KEY (playlist_id) REFERENCES playlist_intelligence(id)
 );
 
--- Indexes for performance
-CREATE INDEX idx_video_playlists_video ON video_playlists(video_id);
-CREATE INDEX idx_video_playlists_playlist ON video_playlists(playlist_id);
+-- Content relationships
+CREATE TABLE video_relationships (
+    video_id VARCHAR(32),
+    related_video_id VARCHAR(32),
+    relationship_type VARCHAR(50), -- sequel, prerequisite, similar_topic
+    confidence REAL,
+    PRIMARY KEY (video_id, related_video_id)
+);
+
+-- Aggregated insights cache
+CREATE TABLE content_insights (
+    insight_type VARCHAR(50) PRIMARY KEY,
+    insight_data JSON,
+    calculated_at DATETIME
+);
+
+-- Performance indexes
+CREATE INDEX idx_video_quality ON video_intelligence(
+    has_captions, caption_quality_score, primary_category
+);
+CREATE INDEX idx_temporal ON video_intelligence(
+    published_at, temporal_relevance
+);
+CREATE INDEX idx_complexity ON video_intelligence(
+    complexity_level, primary_category
+);
 ```
 
 ## Component Design
 
-### 1. YouTube API Integration
+### Unified Content Analyzer
 
-**New: playlist_fetcher.py**
+**New: content_analyzer.py**
 ```python
-class PlaylistFetcher:
-    def fetch_channel_playlists(channel_id: str) -> List[Playlist]:
-        """Fetch all playlists with pagination"""
+class UnifiedContentAnalyzer:
+    """Single-pass analyzer for all content dimensions"""
+    
+    def __init__(self, config: AnalyzerConfig):
+        self.caption_analyzer = CaptionQualityAnalyzer()
+        self.playlist_analyzer = PlaylistAnalyzer() 
+        self.pattern_analyzer = ContentPatternAnalyzer()
+        self.relationship_analyzer = VideoRelationshipAnalyzer()
         
-    def fetch_playlist_items(playlist_id: str) -> List[VideoRef]:
-        """Fetch all videos in playlist with pagination"""
+    async def analyze_channel_comprehensive(self) -> ContentIntelligence:
+        """Perform complete channel analysis in single pass"""
+        # Load all data sources
+        videos = await self._load_videos()
+        playlists = await self._fetch_playlists() if self.config.fetch_playlists else []
+        captions = self._scan_caption_files()
         
-    def build_video_playlist_map(playlists: List[Playlist]) -> Dict:
-        """Create bidirectional mapping"""
+        # Parallel analysis of different dimensions
+        results = await asyncio.gather(
+            self._analyze_caption_quality(videos, captions),
+            self._analyze_content_patterns(videos),
+            self._analyze_playlist_coherence(videos, playlists),
+            self._discover_relationships(videos)
+        )
+        
+        # Synthesize insights
+        intelligence = self._synthesize_intelligence(results)
+        
+        # Cache results
+        self._store_intelligence(intelligence)
+        
+        return intelligence
+        
+    def _analyze_caption_quality(self, videos, captions) -> CaptionAnalysis:
+        """Advanced caption quality assessment"""
+        analysis = CaptionAnalysis()
+        
+        for video in videos:
+            if video.id in captions:
+                quality = self.caption_analyzer.assess_quality(
+                    caption_file=captions[video.id],
+                    video_metadata=video,
+                    check_technical_terms=True,
+                    analyze_timestamps=True
+                )
+                analysis.add_video_quality(video.id, quality)
+                
+        return analysis
+        
+    def _synthesize_intelligence(self, results) -> ContentIntelligence:
+        """Combine all analysis dimensions into unified intelligence"""
+        return ContentIntelligence(
+            caption_insights=results[0],
+            content_patterns=results[1],
+            playlist_insights=results[2],
+            relationships=results[3],
+            recommendations=self._generate_recommendations(results)
+        )
 ```
 
-**API Quota Considerations**:
-- playlists.list: 1 unit per call (50 playlists per page)
-- playlistItems.list: 1 unit per call (50 items per page)
-- Estimated cost for SpotGamma: ~10-20 units total
+### Smart Quality Assessment
+
+**Enhanced: caption_quality_analyzer.py**
+```python
+class CaptionQualityAnalyzer:
+    """Advanced caption quality assessment with multiple metrics"""
+    
+    def __init__(self):
+        self.technical_terms = self._load_domain_vocabulary()
+        self.quality_thresholds = {
+            'high': 0.8,
+            'medium': 0.6,
+            'low': 0.4
+        }
+        
+    def assess_quality(self, caption_file: str, video_metadata: dict,
+                      check_technical_terms=True, analyze_timestamps=True) -> QualityAssessment:
+        """Comprehensive caption quality assessment"""
+        
+        caption_data = self._parse_caption_file(caption_file)
+        
+        # Multiple quality dimensions
+        scores = {
+            'completeness': self._assess_completeness(caption_data, video_metadata['duration']),
+            'technical_accuracy': self._assess_technical_accuracy(caption_data) if check_technical_terms else 1.0,
+            'formatting': self._assess_formatting(caption_data),
+            'timestamp_quality': self._assess_timestamp_quality(caption_data) if analyze_timestamps else 1.0,
+            'coherence': self._assess_coherence(caption_data)
+        }
+        
+        # Weighted composite score
+        weights = {'completeness': 0.3, 'technical_accuracy': 0.25, 
+                  'formatting': 0.15, 'timestamp_quality': 0.2, 'coherence': 0.1}
+        
+        composite_score = sum(scores[k] * weights[k] for k in scores)
+        
+        return QualityAssessment(
+            scores=scores,
+            composite_score=composite_score,
+            quality_level=self._score_to_level(composite_score),
+            technical_terms_found=self._extract_technical_terms(caption_data),
+            issues=self._identify_quality_issues(scores)
+        )
+        
+    def _assess_completeness(self, caption_data, video_duration):
+        """Analyze temporal coverage and gaps"""
+        if not caption_data.timestamps:
+            return 0.0
+            
+        # Calculate coverage
+        covered_duration = self._calculate_covered_duration(caption_data.timestamps)
+        coverage_ratio = covered_duration / video_duration
+        
+        # Penalize for large gaps
+        max_gap = self._find_largest_gap(caption_data.timestamps)
+        gap_penalty = min(max_gap / 60, 0.2)  # Max 20% penalty for gaps > 1 min
+        
+        return max(0, min(1, coverage_ratio - gap_penalty))
+```
 
 ### 2. Document Loader Enhancement
 
 **Modified: document_loader.py**
 ```python
-class DocumentLoader:
-    def load_with_playlists(self):
-        # Load playlist data
-        playlists = self._load_playlist_data()
+class EnhancedDocumentLoader:
+    def __init__(self, analyzer: UnifiedContentAnalyzer):
+        self.analyzer = analyzer
+        self.intelligence_cache = None
         
-        # Enhance metadata for each document
-        for video_id, doc in documents:
-            metadata = self._get_base_metadata(video_id)
-            metadata.update(self._get_playlist_metadata(video_id, playlists))
+    async def load_with_content_intelligence(self):
+        """Load documents with comprehensive content intelligence"""
+        
+        # Run unified analysis if not cached
+        if not self.intelligence_cache:
+            self.intelligence_cache = await self.analyzer.analyze_channel_comprehensive()
+        
+        intelligence = self.intelligence_cache
+        
+        # Load base documents
+        documents = self._load_base_documents()
+        
+        # Enhance each document with multi-dimensional metadata
+        enhanced_documents = []
+        for doc in documents:
+            video_id = doc.metadata.get('source', '')
+            if video_id in intelligence.videos:
+                video_intel = intelligence.videos[video_id]
+                
+                # Add all intelligence dimensions
+                doc.metadata.update({
+                    # Caption intelligence
+                    'has_captions': video_intel.caption_status.available,
+                    'caption_quality_score': video_intel.caption_status.quality_score,
+                    'caption_source': video_intel.caption_status.source,
+                    
+                    # Content intelligence
+                    'primary_category': video_intel.content_analysis.primary_category,
+                    'complexity_level': video_intel.content_analysis.complexity_level,
+                    'temporal_relevance': video_intel.content_analysis.temporal_relevance,
+                    
+                    # Organizational context
+                    'playlist_ids': [p['id'] for p in video_intel.playlist_membership],
+                    'playlist_titles': [p['title'] for p in video_intel.playlist_membership],
+                    
+                    # Quality composite
+                    'retrieval_priority': self._calculate_retrieval_priority(video_intel)
+                })
             
-    def _get_playlist_metadata(self, video_id, playlists):
-        return {
-            "playlist_ids": playlists.video_playlists.get(video_id, []),
-            "playlist_titles": [p.title for p in playlists if video_id in p.videos]
-        }
+            enhanced_documents.append(doc)
+        
+        return enhanced_documents
+        
+    def _calculate_retrieval_priority(self, video_intel):
+        """Calculate retrieval priority based on multiple factors"""
+        score = 0.0
+        
+        # Caption quality weight
+        score += video_intel.caption_status.quality_score * 0.4
+        
+        # Content relevance weight
+        if video_intel.content_analysis.temporal_relevance == 'evergreen':
+            score += 0.3
+        
+        # Complexity appropriateness
+        if video_intel.content_analysis.complexity_level == 'intermediate':
+            score += 0.2
+            
+        # Playlist membership bonus
+        if video_intel.playlist_membership:
+            score += 0.1
+            
+        return score
 ```
 
 ### 3. Dual Vector Store Implementation
 
 #### FAISS Approach (CPU-Optimized)
 
-**Strategy**: Post-retrieval filtering with over-fetching
+**Strategy**: Multi-dimensional filtering with intelligent over-fetching
 
 ```python
-class FAISSPlaylistRetriever:
-    def __init__(self, vector_store, metadata_db):
+class FAISSIntelligentRetriever:
+    def __init__(self, vector_store, content_db):
         self.vector_store = vector_store
-        self.metadata_db = metadata_db
-        self.over_fetch_factor = 5  # Retrieve 5x requested results
+        self.content_db = content_db  # SQLite with full intelligence
+        self.adaptive_fetcher = AdaptiveOverFetcher()
         
-    def search_with_playlists(self, query, k=4, playlist_ids=None, exclude_playlists=None):
-        # Over-fetch to ensure enough results after filtering
-        raw_results = self.vector_store.similarity_search(
-            query, 
-            k=k * self.over_fetch_factor
-        )
+    def search_with_intelligence(self, query: str, filters: RetrievalFilters) -> List[Document]:
+        """Search with comprehensive content intelligence filters"""
         
-        # Apply playlist filtering
-        filtered = []
-        for doc, metadata in raw_results:
-            if self._matches_playlist_filter(metadata, playlist_ids, exclude_playlists):
-                filtered.append((doc, metadata))
-                if len(filtered) >= k:
+        # Calculate optimal over-fetch based on filter restrictiveness
+        fetch_factor = self.adaptive_fetcher.calculate_factor(filters)
+        
+        # Initial vector search
+        raw_results = self.vector_store.similarity_search(query, k=filters.k * fetch_factor)
+        
+        # Get video IDs for batch intelligence lookup
+        video_ids = [doc.metadata['source'] for doc in raw_results]
+        video_intelligence = self.content_db.get_video_intelligence_batch(video_ids)
+        
+        # Apply multi-dimensional filtering
+        filtered_results = []
+        for doc in raw_results:
+            video_id = doc.metadata['source']
+            intel = video_intelligence.get(video_id)
+            
+            if not intel:
+                continue
+                
+            # Check all filter dimensions
+            if self._passes_all_filters(intel, filters):
+                # Enhance document with intelligence
+                doc.metadata.update(self._extract_key_intelligence(intel))
+                
+                # Add relevance boost based on quality
+                doc.metadata['relevance_boost'] = intel.caption_status.quality_score * 0.1
+                
+                filtered_results.append(doc)
+                
+                if len(filtered_results) >= filters.k:
                     break
-                    
-        return filtered[:k]
+        
+        # Re-rank by combined score
+        return self._rerank_by_intelligence(filtered_results, filters)
+        
+    def _passes_all_filters(self, intel: VideoIntelligence, filters: RetrievalFilters) -> bool:
+        """Check if video passes all filter criteria"""
+        
+        # Caption filters
+        if filters.require_captions and not intel.caption_status.available:
+            return False
+            
+        if filters.min_caption_quality:
+            if intel.caption_status.quality_score < self._quality_threshold(filters.min_caption_quality):
+                return False
+        
+        # Content filters
+        if filters.categories and intel.content_analysis.primary_category not in filters.categories:
+            return False
+            
+        if filters.complexity_levels and intel.content_analysis.complexity_level not in filters.complexity_levels:
+            return False
+            
+        # Temporal filters
+        if filters.temporal_relevance and intel.content_analysis.temporal_relevance != filters.temporal_relevance:
+            return False
+            
+        # Playlist filters
+        if filters.playlist_ids:
+            video_playlists = {p['id'] for p in intel.playlist_membership}
+            if not video_playlists.intersection(filters.playlist_ids):
+                return False
+                
+        return True
 ```
 
 **Metadata Storage**: Separate SQLite database with video-playlist mappings
@@ -185,25 +509,40 @@ class FAISSPlaylistRetriever:
 
 #### ChromaDB Approach (GPU-Optimized)
 
-**Strategy**: Native metadata filtering using WHERE clause
+**Strategy**: Native metadata filtering using WHERE clause with caption quality
 
 ```python
-class ChromaPlaylistRetriever:
-    def search_with_playlists(self, query, k=4, playlist_ids=None, exclude_playlists=None):
-        where_clause = self._build_where_clause(playlist_ids, exclude_playlists)
-        
-        return self.vector_store.similarity_search(
-            query,
-            k=k,
-            where=where_clause
+class ChromaEnhancedRetriever:
+    def search_with_filters(self, query, k=4, playlist_ids=None, exclude_playlists=None,
+                           require_captions=False, min_caption_quality="low"):
+        where_clause = self._build_where_clause(
+            playlist_ids, exclude_playlists, require_captions, min_caption_quality
         )
         
-    def _build_where_clause(self, playlist_ids, exclude_playlists):
+        return self.vector_store.similarity_search(query, k=k, where=where_clause)
+        
+    def _build_where_clause(self, playlist_ids, exclude_playlists, require_captions, min_quality):
+        conditions = []
+        
+        # Caption filtering
+        if require_captions:
+            conditions.append({"has_captions": {"$eq": True}})
+            if min_quality != "low":
+                conditions.append({"caption_quality": {"$in": self._get_quality_levels(min_quality)}})
+        
+        # Playlist filtering  
         if playlist_ids:
-            return {"playlist_ids": {"$in": playlist_ids}}
+            conditions.append({"playlist_ids": {"$in": playlist_ids}})
         elif exclude_playlists:
-            return {"playlist_ids": {"$nin": exclude_playlists}}
-        return None
+            conditions.append({"playlist_ids": {"$nin": exclude_playlists}})
+            
+        return {"$and": conditions} if len(conditions) > 1 else conditions[0] if conditions else None
+        
+    def _get_quality_levels(self, min_quality):
+        levels = {"low": ["low", "medium", "high"], 
+                 "medium": ["medium", "high"], 
+                 "high": ["high"]}
+        return levels.get(min_quality, ["low", "medium", "high"])
 ```
 
 **Metadata Storage**: Native in ChromaDB
@@ -213,16 +552,16 @@ class ChromaPlaylistRetriever:
 ### 4. Unified Retriever Interface
 
 ```python
-class PlaylistAwareRetriever:
+class EnhancedRetriever:
     """Factory that returns appropriate retriever based on vector store type"""
     
     @staticmethod
     def create(vector_store, config):
         if isinstance(vector_store, FAISSVectorStore):
             metadata_db = MetadataDB(config.db_path)
-            return FAISSPlaylistRetriever(vector_store, metadata_db)
+            return FAISSEnhancedRetriever(vector_store, metadata_db)
         elif isinstance(vector_store, Chroma):
-            return ChromaPlaylistRetriever(vector_store)
+            return ChromaEnhancedRetriever(vector_store)
         else:
             raise ValueError(f"Unsupported vector store: {type(vector_store)}")
 ```
@@ -245,24 +584,60 @@ class PlaylistAwareRetriever:
 }
 
 # POST /api/ask
-# Enhanced with playlist filtering
+# Enhanced with caption and playlist filtering
 {
     "question": "How do gamma squeezes work?",
     "playlist_ids": ["PLxxxxxx"],  # Optional: include only
     "exclude_playlist_ids": ["PLyyyyyy"],  # Optional: exclude
+    "require_captions": true,  # Optional: only captioned content
+    "min_caption_quality": "medium",  # Optional: quality threshold
     "k": 4
+}
+
+# GET /api/caption-stats
+# Returns caption coverage analysis
+{
+    "total_videos": 341,
+    "captioned_videos": 192,
+    "coverage_percentage": 56.3,
+    "quality_breakdown": {
+        "high": 120,
+        "medium": 52, 
+        "low": 20,
+        "none": 149
+    },
+    "by_content_type": {
+        "educational": {"total": 80, "captioned": 75},
+        "daily_updates": {"total": 200, "captioned": 90},
+        "interviews": {"total": 61, "captioned": 27}
+    }
 }
 ```
 
 ### 6. UI Components
 
-**New: PlaylistSelector.vue**
+**New: EnhancedFilterPanel.js**
 ```javascript
-// Multi-select dropdown with:
-// - Checkbox for each playlist
-// - "Select All" / "Clear All" options
-// - Preset filters (Educational, Recent, etc.)
-// - Show video count per playlist
+// Combined filtering interface with:
+// - Caption quality toggle ("Captions Required", "High Quality Only")
+// - Playlist multi-select dropdown with caption coverage stats
+// - Content type presets ("Educational Only", "Recent Updates", "Interviews")
+// - Visual indicators for video counts and caption coverage per filter
+// - "Smart Filter" that automatically prioritizes captioned educational content
+
+// Example filter panel:
+// ┌─ Content Filters ────────────────────┐
+// │ ☑ Require Captions (192/341 videos)  │ 
+// │ ☐ High Quality Only (120/192 videos) │
+// │                                      │
+// │ Playlists: [Multi-Select Dropdown]   │
+// │ ├─ Options Education (75/80 videos)  │
+// │ ├─ Daily Updates (90/200 videos)     │
+// │ └─ Interviews (27/61 videos)         │
+// │                                      │
+// │ Quick Filters:                       │
+// │ [Educational] [Recent] [High Quality]│
+// └──────────────────────────────────────┘
 ```
 
 ## Performance Considerations
@@ -314,30 +689,54 @@ class PlaylistAwareRetriever:
 
 ## Migration Strategy
 
-### From Current to Playlist-Aware
+### From Current to Enhanced System
 
-1. **Phase 1**: Add playlist fetching without breaking changes
-2. **Phase 2**: Enhance metadata in new documents
-3. **Phase 3**: Backfill existing documents with playlist data
-4. **Phase 4**: Enable UI filtering options
+1. **Phase 1**: Unified Content Analysis (Foundation)
+   - Implement UnifiedContentAnalyzer for single-pass analysis
+   - Analyze captions, playlists, patterns, and relationships together
+   - Generate comprehensive content intelligence database
+   - Provide immediate value: caption coverage report + content insights
+   
+2. **Phase 2**: Intelligence Integration
+   - Enhance document metadata with full intelligence
+   - Implement intelligent retrieval with multi-dimensional filtering
+   - Add quality-aware ranking and re-ranking
+   
+3. **Phase 3**: Advanced Features
+   - Content relationship discovery and navigation
+   - Predictive quality improvements
+   - Auto-categorization for new content
+   
+4. **Phase 4**: UI and API Enhancement
+   - Unified filter interface with all dimensions
+   - Real-time intelligence dashboard
+   - Content quality recommendations
 
 ### From FAISS to ChromaDB
 
 ```python
-# Migration preserves playlist metadata
-class PlaylistAwareMigrator:
+# Migration preserves caption + playlist metadata
+class EnhancedMigrator:
     def migrate(self, source_faiss, target_chroma):
         # Standard migration
         documents, embeddings = source_faiss.export()
         
-        # Enhance with playlist metadata
+        # Enhance with caption and playlist metadata
+        caption_analyzer = CaptionAnalyzer()
         metadata_db = MetadataDB()
+        
         for i, doc in enumerate(documents):
             video_id = doc.metadata['source']
+            
+            # Add caption metadata
+            caption_data = caption_analyzer.get_video_caption_data(video_id)
+            doc.metadata.update(caption_data)
+            
+            # Add playlist metadata
             playlist_data = metadata_db.get_playlists(video_id)
             doc.metadata.update(playlist_data)
             
-        # Import to ChromaDB
+        # Import to ChromaDB with enhanced metadata
         target_chroma.import(documents, embeddings)
 ```
 
