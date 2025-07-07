@@ -15,6 +15,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from vector_stores.faiss import FAISSVectorStore
 from core.config import Config
 from api.models import Source
+from data_pipeline.metadata_enhancer import MetadataEnhancer
+from api.filters import DocumentFilter
 
 
 class RAGEngine:
@@ -23,6 +25,8 @@ class RAGEngine:
     def __init__(self, config: Config):
         self.config = config
         self.vector_store = FAISSVectorStore(config)
+        self.metadata_enhancer = MetadataEnhancer()
+        self.document_filter = DocumentFilter()
         
         # Initialize OpenAI clients
         self.client = OpenAI(
@@ -38,10 +42,19 @@ class RAGEngine:
         self.model = config.openai_model()
         self.temperature = config.llm_temperature()
         
-    def retrieve_sources(self, question: str, num_sources: int = 4) -> List[Dict[str, Any]]:
-        """Retrieve relevant sources from vector store."""
+    def retrieve_sources(self, question: str, num_sources: int = 4, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """Retrieve relevant sources from vector store with optional filtering."""
+        # Set filters if provided
+        if filters:
+            self.document_filter.set_filters(filters)
+        
+        # Calculate how many to fetch if filters are active
+        fetch_count = num_sources
+        if filters and self.document_filter.has_active_filters():
+            fetch_count = self.document_filter.calculate_over_fetch(num_sources, True)
+        
         # Get documents with scores
-        results = self.vector_store.similarity_search_with_score(question, k=num_sources)
+        results = self.vector_store.similarity_search_with_score(question, k=fetch_count)
         
         sources = []
         for doc_text, score, metadata in results:
@@ -50,6 +63,12 @@ class RAGEngine:
                 'score': float(score),
                 'metadata': metadata
             })
+        
+        # Apply filters if active
+        if filters and self.document_filter.has_active_filters():
+            sources = self.document_filter.apply_filters(sources)
+            # Limit to requested number after filtering
+            sources = sources[:num_sources]
         
         return sources
     
@@ -167,13 +186,14 @@ Please provide a comprehensive answer based on the context above."""
         self, 
         question: str, 
         num_sources: int = 4, 
-        temperature: float = None
+        temperature: float = None,
+        filters: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Simple synchronous Q&A method."""
         start_time = time.time()
         
         # Retrieve sources
-        sources = self.retrieve_sources(question, num_sources)
+        sources = self.retrieve_sources(question, num_sources, filters)
         
         # Build context
         context = self.build_context(sources)
@@ -194,13 +214,14 @@ Please provide a comprehensive answer based on the context above."""
         self, 
         question: str, 
         num_sources: int = 4, 
-        temperature: float = None
+        temperature: float = None,
+        filters: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Async Q&A method."""
         start_time = time.time()
         
         # Retrieve sources (sync for now, could be made async)
-        sources = await asyncio.to_thread(self.retrieve_sources, question, num_sources)
+        sources = await asyncio.to_thread(self.retrieve_sources, question, num_sources, filters)
         
         # Build context
         context = self.build_context(sources)
@@ -227,3 +248,24 @@ Please provide a comprehensive answer based on the context above."""
             'model': self.model,
             'embeddings_model': 'text-embedding-3-small'
         }
+    
+    def get_filter_statistics(self) -> Dict[str, Any]:
+        """Get filter statistics for available documents."""
+        # Get all documents metadata from vector store
+        # For now, we'll get a large sample to calculate statistics
+        # In production, this could be cached or pre-calculated
+        sample_size = 1000  # Get a good sample size
+        results = self.vector_store.similarity_search_with_score("", k=sample_size)
+        
+        # Extract unique documents by video_id
+        unique_docs = {}
+        for doc_text, score, metadata in results:
+            video_id = metadata.get('video_id', metadata.get('source', ''))
+            if video_id and video_id not in unique_docs:
+                unique_docs[video_id] = metadata
+        
+        # Convert to list for statistics calculation
+        documents = [{'metadata': metadata} for metadata in unique_docs.values()]
+        
+        # Calculate statistics using metadata enhancer
+        return self.metadata_enhancer.get_filter_statistics(documents)

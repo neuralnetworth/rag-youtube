@@ -200,6 +200,18 @@ main {
     font-size: 0.875rem;
 }
 
+/* Filter options */
+.filter-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.caption-info {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
 /* Results Section */
 .results-section {
     display: grid;

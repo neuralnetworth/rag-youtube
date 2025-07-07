@@ -12,6 +12,7 @@ class QuestionRequest(BaseModel):
     search_type: str = Field(default="similarity", pattern="^(similarity|mmr|similarity_score_threshold)$")
     temperature: float = Field(default=0.7, ge=0, le=2, description="LLM temperature")
     stream: bool = Field(default=False, description="Enable streaming response")
+    filters: Optional[Dict[str, Any]] = Field(default=None, description="Document filters")
 
 
 class Source(BaseModel):
@@ -60,3 +61,25 @@ class HealthResponse(BaseModel):
     vector_store: bool = Field(..., description="Vector store availability")
     llm: bool = Field(..., description="LLM availability")
     message: str = Field(default="Service is operational")
+
+
+class CaptionCoverage(BaseModel):
+    """Caption coverage statistics."""
+    with_captions: int = Field(..., description="Number of documents with captions")
+    without_captions: int = Field(..., description="Number of documents without captions")
+    percentage: float = Field(..., description="Percentage of documents with captions")
+
+
+class DateRange(BaseModel):
+    """Date range for filtering."""
+    earliest: Optional[str] = Field(None, description="Earliest publication date (YYYY-MM-DD)")
+    latest: Optional[str] = Field(None, description="Latest publication date (YYYY-MM-DD)")
+
+
+class FilterOptions(BaseModel):
+    """Available filter options and statistics."""
+    total_documents: int = Field(..., description="Total number of documents")
+    categories: Dict[str, int] = Field(..., description="Document count by category")
+    quality_levels: Dict[str, int] = Field(..., description="Document count by quality level")
+    caption_coverage: CaptionCoverage = Field(..., description="Caption availability statistics")
+    date_range: DateRange = Field(..., description="Available date range for filtering")

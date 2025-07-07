@@ -22,7 +22,8 @@ from core import consts
 from api.config_fastapi import FastAPIConfig
 from api.models import (
     QuestionRequest, AnswerResponse, StreamChunk,
-    SystemStats, ErrorResponse, HealthResponse, Source
+    SystemStats, ErrorResponse, HealthResponse, Source,
+    FilterOptions, CaptionCoverage, DateRange
 )
 from api.rag_engine import RAGEngine
 
@@ -122,6 +123,32 @@ async def get_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/filters/options", response_model=FilterOptions)
+async def get_filter_options():
+    """Get available filter options and statistics."""
+    try:
+        # Get filter statistics from RAG engine
+        filter_stats = rag_engine.get_filter_statistics()
+        
+        # Convert to response model
+        return FilterOptions(
+            total_documents=filter_stats['total_documents'],
+            categories=filter_stats['categories'],
+            quality_levels=filter_stats['quality_levels'],
+            caption_coverage=CaptionCoverage(
+                with_captions=filter_stats['caption_coverage']['with_captions'],
+                without_captions=filter_stats['caption_coverage']['without_captions'],
+                percentage=filter_stats['caption_coverage']['percentage']
+            ),
+            date_range=DateRange(
+                earliest=filter_stats['date_range']['earliest'],
+                latest=filter_stats['date_range']['latest']
+            )
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/ask", response_model=AnswerResponse)
 async def ask_question(request: QuestionRequest):
     """Ask a question and get an answer with sources."""
@@ -130,7 +157,8 @@ async def ask_question(request: QuestionRequest):
         result = await rag_engine.ask_async(
             question=request.question,
             num_sources=request.num_sources,
-            temperature=request.temperature
+            temperature=request.temperature,
+            filters=request.filters
         )
         
         # Convert sources to response model
@@ -161,7 +189,8 @@ async def ask_question_stream(request: QuestionRequest):
             # First, send the sources
             sources = rag_engine.retrieve_sources(
                 request.question, 
-                request.num_sources
+                request.num_sources,
+                request.filters
             )
             
             for i, source in enumerate(sources):

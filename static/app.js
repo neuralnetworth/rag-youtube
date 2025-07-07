@@ -15,6 +15,8 @@ const processingTime = document.getElementById('processing-time');
 const examplesSection = document.getElementById('examples-section');
 const statsContainer = document.getElementById('stats-docs');
 const darkModeToggle = document.getElementById('dark-mode-toggle');
+const requireCaptionsCheckbox = document.getElementById('require-captions-checkbox');
+const captionCoverage = document.getElementById('caption-coverage');
 
 // State
 let isProcessing = false;
@@ -23,6 +25,7 @@ let currentEventSource = null;
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadStats();
+    loadFilterOptions();
     setupEventListeners();
     initDarkMode();
 });
@@ -35,6 +38,21 @@ async function loadStats() {
         statsContainer.textContent = `${stats.total_documents.toLocaleString()} documents indexed | Model: ${stats.model}`;
     } catch (error) {
         statsContainer.textContent = 'Unable to load stats';
+    }
+}
+
+// Load filter options
+async function loadFilterOptions() {
+    try {
+        const response = await fetch(`${API_BASE}/filters/options`);
+        const filterData = await response.json();
+        
+        // Update caption coverage display
+        const coverage = filterData.caption_coverage;
+        captionCoverage.textContent = `(${coverage.with_captions}/${filterData.total_documents} videos)`;
+        
+    } catch (error) {
+        console.error('Error loading filter options:', error);
     }
 }
 
@@ -87,6 +105,12 @@ async function handleSubmit(e) {
 async function askQuestion(question, numSources) {
     const startTime = Date.now();
     
+    // Build filters object
+    const filters = {};
+    if (requireCaptionsCheckbox.checked) {
+        filters.require_captions = true;
+    }
+    
     const response = await fetch(`${API_BASE}/ask`, {
         method: 'POST',
         headers: {
@@ -97,7 +121,8 @@ async function askQuestion(question, numSources) {
             num_sources: numSources,
             search_type: 'similarity',
             temperature: 0.7,
-            stream: false
+            stream: false,
+            filters: Object.keys(filters).length > 0 ? filters : null
         })
     });
     
@@ -127,13 +152,20 @@ async function askQuestionStream(question, numSources) {
         currentEventSource.close();
     }
     
+    // Build filters object
+    const filters = {};
+    if (requireCaptionsCheckbox.checked) {
+        filters.require_captions = true;
+    }
+    
     // Create EventSource for streaming
     const body = JSON.stringify({
         question: question,
         num_sources: numSources,
         search_type: 'similarity',
         temperature: 0.7,
-        stream: true
+        stream: true,
+        filters: Object.keys(filters).length > 0 ? filters : null
     });
     
     const response = await fetch(`${API_BASE}/ask/stream`, {
