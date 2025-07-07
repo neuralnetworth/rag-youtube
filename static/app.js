@@ -17,6 +17,14 @@ const statsContainer = document.getElementById('stats-docs');
 const darkModeToggle = document.getElementById('dark-mode-toggle');
 const requireCaptionsCheckbox = document.getElementById('require-captions-checkbox');
 const captionCoverage = document.getElementById('caption-coverage');
+const categoryFilter = document.getElementById('category-filter');
+const categoryCount = document.getElementById('category-count');
+const qualityFilter = document.getElementById('quality-filter');
+const qualityCount = document.getElementById('quality-count');
+const dateFrom = document.getElementById('date-from');
+const dateTo = document.getElementById('date-to');
+const dateRangeInfo = document.getElementById('date-range-info');
+const clearFiltersBtn = document.getElementById('clear-filters-btn');
 
 // State
 let isProcessing = false;
@@ -51,9 +59,38 @@ async function loadFilterOptions() {
         const coverage = filterData.caption_coverage;
         captionCoverage.textContent = `(${coverage.with_captions}/${filterData.total_documents} videos)`;
         
+        // Update category counts
+        updateFilterCounts(categoryFilter, categoryCount, filterData.categories);
+        
+        // Update quality counts
+        updateFilterCounts(qualityFilter, qualityCount, filterData.quality_levels);
+        
+        // Update date range info
+        if (filterData.date_range.earliest && filterData.date_range.latest) {
+            dateRangeInfo.textContent = `(${formatDate(filterData.date_range.earliest)} - ${formatDate(filterData.date_range.latest)})`;
+        }
+        
     } catch (error) {
         console.error('Error loading filter options:', error);
     }
+}
+
+// Helper function to update filter counts
+function updateFilterCounts(selectElement, countElement, countData) {
+    const selectedValue = selectElement.value;
+    if (selectedValue && countData[selectedValue] !== undefined) {
+        countElement.textContent = `(${countData[selectedValue]} videos)`;
+    } else {
+        // Show total for "All" option
+        const total = Object.values(countData).reduce((sum, count) => sum + count, 0);
+        countElement.textContent = `(${total} total)`;
+    }
+}
+
+// Helper function to format date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 // Setup event listeners
@@ -69,6 +106,68 @@ function setupEventListeners() {
             questionInput.focus();
         });
     });
+    
+    // Filter change listeners
+    requireCaptionsCheckbox.addEventListener('change', updateFilterDisplay);
+    categoryFilter.addEventListener('change', updateFilterDisplay);
+    qualityFilter.addEventListener('change', updateFilterDisplay);
+    dateFrom.addEventListener('change', updateFilterDisplay);
+    dateTo.addEventListener('change', updateFilterDisplay);
+    
+    // Clear filters button
+    clearFiltersBtn.addEventListener('click', clearAllFilters);
+}
+
+// Update filter display and show/hide clear button
+function updateFilterDisplay() {
+    // Update counts when filters change
+    loadFilterOptions();
+    
+    // Show/hide clear filters button
+    const hasActiveFilters = requireCaptionsCheckbox.checked || 
+                           categoryFilter.value || 
+                           qualityFilter.value || 
+                           dateFrom.value || 
+                           dateTo.value;
+    
+    clearFiltersBtn.style.display = hasActiveFilters ? 'block' : 'none';
+}
+
+// Clear all filters
+function clearAllFilters() {
+    requireCaptionsCheckbox.checked = false;
+    categoryFilter.value = '';
+    qualityFilter.value = '';
+    dateFrom.value = '';
+    dateTo.value = '';
+    updateFilterDisplay();
+}
+
+// Build filters object from UI state
+function buildFilters() {
+    const filters = {};
+    
+    if (requireCaptionsCheckbox.checked) {
+        filters.require_captions = true;
+    }
+    
+    if (categoryFilter.value) {
+        filters.categories = [categoryFilter.value];
+    }
+    
+    if (qualityFilter.value) {
+        filters.quality_levels = [qualityFilter.value];
+    }
+    
+    if (dateFrom.value) {
+        filters.date_from = dateFrom.value;
+    }
+    
+    if (dateTo.value) {
+        filters.date_to = dateTo.value;
+    }
+    
+    return Object.keys(filters).length > 0 ? filters : null;
 }
 
 // Handle form submission
@@ -106,10 +205,7 @@ async function askQuestion(question, numSources) {
     const startTime = Date.now();
     
     // Build filters object
-    const filters = {};
-    if (requireCaptionsCheckbox.checked) {
-        filters.require_captions = true;
-    }
+    const filters = buildFilters();
     
     const response = await fetch(`${API_BASE}/ask`, {
         method: 'POST',
@@ -122,7 +218,7 @@ async function askQuestion(question, numSources) {
             search_type: 'similarity',
             temperature: 0.7,
             stream: false,
-            filters: Object.keys(filters).length > 0 ? filters : null
+            filters: filters
         })
     });
     
@@ -153,10 +249,7 @@ async function askQuestionStream(question, numSources) {
     }
     
     // Build filters object
-    const filters = {};
-    if (requireCaptionsCheckbox.checked) {
-        filters.require_captions = true;
-    }
+    const filters = buildFilters();
     
     // Create EventSource for streaming
     const body = JSON.stringify({

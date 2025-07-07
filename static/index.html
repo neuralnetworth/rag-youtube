@@ -51,11 +51,54 @@
                                 <option value="6">6</option>
                             </select>
                         </label>
-                        <label class="filter-option">
-                            <input type="checkbox" id="require-captions-checkbox">
-                            Require captions
-                            <span id="caption-coverage" class="caption-info"></span>
-                        </label>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h4 class="filter-header">Filters</h4>
+                        <div class="filter-controls">
+                            <label class="filter-option">
+                                <input type="checkbox" id="require-captions-checkbox">
+                                Require captions
+                                <span id="caption-coverage" class="caption-info"></span>
+                            </label>
+                            
+                            <label class="filter-option">
+                                Category:
+                                <select id="category-filter" class="filter-select">
+                                    <option value="">All Categories</option>
+                                    <option value="daily_update">Daily Updates</option>
+                                    <option value="educational">Educational</option>
+                                    <option value="interview">Interviews</option>
+                                    <option value="special_event">Special Events</option>
+                                </select>
+                                <span id="category-count" class="filter-count"></span>
+                            </label>
+                            
+                            <label class="filter-option">
+                                Quality:
+                                <select id="quality-filter" class="filter-select">
+                                    <option value="">All Quality Levels</option>
+                                    <option value="high">High Quality</option>
+                                    <option value="medium">Medium Quality</option>
+                                    <option value="low">Low Quality</option>
+                                </select>
+                                <span id="quality-count" class="filter-count"></span>
+                            </label>
+                            
+                            <div class="date-range-filter">
+                                <label class="filter-option">
+                                    Date Range:
+                                    <input type="date" id="date-from" class="date-input" placeholder="From">
+                                    <span class="date-separator">to</span>
+                                    <input type="date" id="date-to" class="date-input" placeholder="To">
+                                </label>
+                                <span id="date-range-info" class="filter-info"></span>
+                            </div>
+                            
+                            <button type="button" id="clear-filters-btn" class="clear-filters-btn" style="display: none;">
+                                Clear Filters
+                            </button>
+                        </div>
                     </div>
                 </form>
             </section>

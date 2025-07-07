@@ -200,16 +200,112 @@ main {
     font-size: 0.875rem;
 }
 
-/* Filter options */
+/* Filter Section */
+.filter-section {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: var(--background);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.filter-header {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.filter-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* Filter Options */
 .filter-option {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.caption-info {
+.filter-select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    min-width: 150px;
+}
+
+.filter-select:hover {
+    border-color: var(--primary-color);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(52, 120, 246, 0.2);
+}
+
+.caption-info,
+.filter-count,
+.filter-info {
     color: var(--text-secondary);
     font-size: 0.8rem;
+}
+
+.date-range-filter {
+    grid-column: 1 / -1;
+}
+
+.date-input {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.date-separator {
+    margin: 0 0.5rem;
+    color: var(--text-secondary);
+}
+
+.clear-filters-btn {
+    grid-column: 1 / -1;
+    padding: 0.6rem 1.2rem;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+    background-color: var(--error-color);
+    color: white;
+    border-color: var(--error-color);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .filter-section {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .filter-select,
+[data-theme="dark"] .date-input {
+    background-color: var(--surface);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .filter-select:hover,
+[data-theme="dark"] .date-input:hover {
+    border-color: var(--primary-color);
 }
 
 /* Results Section */
@@ -387,5 +483,14 @@ footer {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
+    }
+    
+    .filter-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-select,
+    .date-input {
+        width: 100%;
     }
 }
