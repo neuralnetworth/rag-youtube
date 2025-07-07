@@ -14,8 +14,18 @@ logger = logging.getLogger(__name__)
 class MetadataEnhancer:
     """Enhances document metadata with categories, quality scores, and other attributes."""
     
-    # Category patterns for title matching
+    # Category patterns for title matching (order matters - more specific first)
     CATEGORY_PATTERNS = {
+        "educational": [
+            r"(what|how|why|when)\s+(is|are|does|do)",
+            r"how\s+to\s+",
+            r"explained|explaining|explains",
+            r"introduction\s+to",
+            r"tutorial|guide|basics",
+            r"learn|learning|lesson",
+            r"101|beginner|fundamental",
+            r"understanding|understand"
+        ],
         "daily_update": [
             r"market\s*(update|outlook|recap|review)",
             r"daily\s*(update|recap|market)",
@@ -24,15 +34,6 @@ class MetadataEnhancer:
             r"open\s*interest",
             r"gamma\s*(update|levels)",
             r"0dte|zero\s*dte"
-        ],
-        "educational": [
-            r"(what|how|why|when)\s+(is|are|does|do)",
-            r"explained|explaining|explains",
-            r"introduction\s+to",
-            r"tutorial|guide|basics",
-            r"learn|learning|lesson",
-            r"101|beginner|fundamental",
-            r"understanding|understand"
         ],
         "interview": [
             r"interview|conversation|chat\s+with",
@@ -91,9 +92,10 @@ class MetadataEnhancer:
         
         # Calculate quality score if content is available
         if 'content' in enhanced:
+            duration_seconds = self._parse_duration(enhanced.get('duration', 0))
             quality_data = self._calculate_quality(
                 enhanced['content'],
-                enhanced.get('duration', 0)
+                duration_seconds
             )
             enhanced.update(quality_data)
         else:
@@ -123,13 +125,46 @@ class MetadataEnhancer:
         if not title:
             return 'uncategorized'
         
-        # Check each category's patterns
+        # Check each category's patterns (case-insensitive)
+        title_lower = title.lower()
         for category, patterns in self.compiled_patterns.items():
             for pattern in patterns:
-                if pattern.search(title):
+                if pattern.search(title_lower):
                     return category
         
         return 'uncategorized'
+    
+    def _parse_duration(self, duration) -> int:
+        """
+        Parse duration from various formats to seconds.
+        
+        Args:
+            duration: Duration in seconds (int), minutes (float), or HH:MM:SS format (str)
+            
+        Returns:
+            Duration in seconds
+        """
+        if isinstance(duration, int):
+            return duration
+        elif isinstance(duration, float):
+            return int(duration * 60)  # Assume float is minutes
+        elif isinstance(duration, str):
+            if ':' in duration:
+                # Parse HH:MM:SS or MM:SS format
+                parts = duration.split(':')
+                if len(parts) == 3:  # HH:MM:SS
+                    hours, minutes, seconds = map(int, parts)
+                    return hours * 3600 + minutes * 60 + seconds
+                elif len(parts) == 2:  # MM:SS
+                    minutes, seconds = map(int, parts)
+                    return minutes * 60 + seconds
+            else:
+                # Try to parse as number
+                try:
+                    return int(float(duration))
+                except ValueError:
+                    return 0
+        return 0
     
     def _calculate_quality(self, content: str, duration: int) -> Dict:
         """

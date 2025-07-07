@@ -40,6 +40,35 @@ async def test_stats():
     print("✓ Stats endpoint passed\n")
 
 
+async def test_filter_options():
+    """Test filter options endpoint."""
+    print("Testing filter options endpoint...")
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{BASE_URL}/api/filters/options")
+        print(f"Status: {response.status_code}")
+        data = response.json()
+        
+        print(f"Total documents: {data['total_documents']}")
+        print(f"Caption coverage: {data['caption_coverage']}")
+        print(f"Categories: {list(data['categories'].keys())}")
+        print(f"Quality levels: {list(data['quality_levels'].keys())}")
+        
+        assert response.status_code == 200
+        assert "total_documents" in data
+        assert "caption_coverage" in data
+        assert "categories" in data
+        assert "quality_levels" in data
+        assert "date_range" in data
+        
+        # Check caption coverage structure
+        coverage = data['caption_coverage']
+        assert "with_captions" in coverage
+        assert "without_captions" in coverage
+        assert "percentage" in coverage
+        
+    print("✓ Filter options endpoint passed\n")
+
+
 async def test_ask():
     """Test ask endpoint (non-streaming)."""
     print("Testing ask endpoint...")
@@ -69,6 +98,46 @@ async def test_ask():
         assert len(data["answer"]) > 0
         assert len(data["sources"]) > 0
     print("✓ Ask endpoint passed\n")
+
+
+async def test_ask_with_filters():
+    """Test ask endpoint with filters."""
+    print("Testing ask endpoint with filters...")
+    async with httpx.AsyncClient() as client:
+        question = "How do gamma squeezes work?"
+        
+        # Test with caption filter
+        response = await client.post(
+            f"{BASE_URL}/api/ask",
+            json={
+                "question": question,
+                "num_sources": 3,
+                "search_type": "similarity",
+                "temperature": 0.7,
+                "stream": False,
+                "filters": {
+                    "require_captions": True
+                }
+            }
+        )
+        
+        print(f"Status: {response.status_code}")
+        data = response.json()
+        
+        print(f"\nQuestion: {question}")
+        print(f"Answer preview: {data['answer'][:150]}...")
+        print(f"Number of sources (with caption filter): {len(data['sources'])}")
+        print(f"Processing time: {data['processing_time']:.2f} seconds")
+        
+        # Check that sources have caption metadata
+        for i, source in enumerate(data['sources']):
+            has_captions = source['metadata'].get('has_captions')
+            print(f"  Source {i+1}: has_captions = {has_captions}")
+        
+        assert response.status_code == 200
+        assert len(data["answer"]) > 0
+        assert len(data["sources"]) > 0
+    print("✓ Ask endpoint with filters passed\n")
 
 
 async def test_ask_stream():
@@ -120,6 +189,61 @@ async def test_ask_stream():
     print("✓ Streaming endpoint passed\n")
 
 
+async def test_ask_stream_with_filters():
+    """Test streaming ask endpoint with filters."""
+    print("Testing streaming ask endpoint with filters...")
+    async with httpx.AsyncClient() as client:
+        question = "What does SpotGamma say about 0DTE options?"
+        
+        response = await client.post(
+            f"{BASE_URL}/api/ask/stream",
+            json={
+                "question": question,
+                "num_sources": 3,
+                "search_type": "similarity",
+                "temperature": 0.7,
+                "stream": True,
+                "filters": {
+                    "require_captions": True
+                }
+            }
+        )
+        
+        print(f"Status: {response.status_code}")
+        print(f"Question: {question}")
+        print("Streaming response with filters:")
+        
+        sources_count = 0
+        tokens_count = 0
+        
+        # Process streaming response
+        async for line in response.aiter_lines():
+            if line.startswith("data: "):
+                import json
+                data = json.loads(line[6:])
+                
+                if data["type"] == "source":
+                    sources_count += 1
+                    # Parse source to check metadata
+                    source_data = json.loads(data["content"])
+                    has_captions = source_data.get('metadata', {}).get('has_captions')
+                    print(f"  [Source {sources_count}] received (has_captions: {has_captions})")
+                elif data["type"] == "token":
+                    tokens_count += 1
+                    print(data["content"], end="", flush=True)
+                elif data["type"] == "done":
+                    print("\n  [Streaming complete]")
+                    break
+                elif data["type"] == "error":
+                    print(f"\n  [Error] {data['content']}")
+                    break
+        
+        assert response.status_code == 200
+        assert sources_count > 0
+        assert tokens_count > 0
+    print("✓ Streaming endpoint with filters passed\n")
+
+
 async def test_ui():
     """Test that UI is served."""
     print("Testing UI endpoint...")
@@ -163,8 +287,11 @@ async def run_all_tests():
         # Run tests
         await test_health()
         await test_stats()
+        await test_filter_options()
         await test_ask()
+        await test_ask_with_filters()
         await test_ask_stream()
+        await test_ask_stream_with_filters()
         await test_ui()
         
         print("="*60)
