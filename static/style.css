@@ -249,11 +249,37 @@ main {
     box-shadow: 0 0 0 2px rgba(52, 120, 246, 0.2);
 }
 
+.filter-select-multi {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    width: 100%;
+    min-height: 80px;
+    max-height: 120px;
+}
+
+.filter-select-multi:hover {
+    border-color: var(--primary-color);
+}
+
+.filter-select-multi:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(52, 120, 246, 0.2);
+}
+
 .caption-info,
 .filter-count,
 .filter-info {
     color: var(--text-secondary);
     font-size: 0.8rem;
+}
+
+.playlist-filter {
+    grid-column: 1 / -1;
 }
 
 .date-range-filter {
@@ -304,6 +330,7 @@ main {
 }
 
 [data-theme="dark"] .filter-select:hover,
+[data-theme="dark"] .filter-select-multi:hover,
 [data-theme="dark"] .date-input:hover {
     border-color: var(--primary-color);
 }

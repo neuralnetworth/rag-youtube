@@ -44,6 +44,15 @@ uv run uvicorn src.api.main:app --reload
 - ✅ Minimal dependencies
 - ✅ Works with existing SpotGamma data
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[Documentation Index](docs/)** - Start here for all documentation
+- **[FAISS-RAG Architecture](docs/faiss-rag/)** - Core system documentation
+- **[Content Filtering Guide](docs/content-filtering/)** - Filtering system details
+- **[Setup Guide](docs/faiss-rag/setup-guide.md)** - Detailed installation instructions
+
 ## 📁 Repository Structure
 
 ```
@@ -141,25 +150,38 @@ ollama pull mistral:latest
 
 ```bash
 # Get channel video list (using any video ID from the channel)
-GOOGLE_API_KEY=your_key uv run python src/list_videos.py VIDEO_ID_FROM_CHANNEL
+GOOGLE_API_KEY=your_key uv run python src/data_pipeline/list_videos.py VIDEO_ID_FROM_CHANNEL
 ```
 
 ### 2. Download Captions
 
 ```bash
 # Download all video captions (may take 10+ minutes for large channels)
-uv run python src/download_captions.py
+uv run python src/data_pipeline/download_captions.py
 ```
 
-### 3. Load Into Vector Database
+### 3. Fetch Playlist Data (Optional but Recommended)
 
 ```bash
-# For FAISS setup
-uv run python src/document_loader_faiss.py
+# Retrieve playlist information for better filtering
+GOOGLE_API_KEY=your_key uv run python src/data_pipeline/playlist_fetcher.py
+```
+
+### 4. Load Into Vector Database
+
+```bash
+# For FAISS setup (includes enhanced metadata)
+uv run python src/data_pipeline/document_loader_faiss.py
 
 # For ChromaDB setup  
-uv run python src/document_loader.py
+uv run python src/legacy/document_loader.py
 ```
+
+The document loader automatically:
+- Infers video categories (daily updates, educational, interviews, special events)
+- Calculates quality scores based on transcript density
+- Associates videos with their YouTube playlists
+- Tracks caption availability
 
 ## 🧪 Testing Your Setup
 
@@ -216,6 +238,44 @@ uv run uvicorn src.api.main:app --reload
 - 📱 **Responsive design** for mobile/desktop
 - 🔍 **Example questions** for SpotGamma content
 - ⚙️ **Configurable** search parameters
+- 🎨 **Advanced filtering** by category, quality, playlist, and date
+
+### Content Filtering
+
+The web interface includes powerful filtering options to refine your searches:
+
+#### Filter Types
+
+1. **Caption Filter**
+   - Toggle "Require captions" to only search videos with transcripts
+   - Shows caption coverage (e.g., "192/341 videos")
+
+2. **Category Filter**
+   - Daily Updates: Market analysis and daily recaps
+   - Educational: Tutorial and explainer content
+   - Interviews: Conversations and discussions
+   - Special Events: OPEX, earnings, major market events
+
+3. **Quality Filter**
+   - High: Dense technical content (120+ WPM, 5+ technical terms)
+   - Medium: Moderate technical content (80+ WPM, 2+ technical terms)
+   - Low: Basic content (40+ WPM)
+
+4. **Playlist Filter**
+   - Multi-select dropdown showing all channel playlists
+   - Hold Ctrl/Cmd to select multiple playlists
+   - Shows video count per playlist
+
+5. **Date Range Filter**
+   - Select start and end dates to filter by publication date
+   - Shows available date range for the channel
+
+#### Using Filters
+
+1. **Apply Filters**: Select your desired filters before asking a question
+2. **Clear Filters**: Click "Clear Filters" button to reset all selections
+3. **Combine Filters**: All filters work together (AND logic)
+4. **Performance**: Filters use 3x over-fetching to ensure quality results
 
 ## 📺 Multi-Channel Support
 

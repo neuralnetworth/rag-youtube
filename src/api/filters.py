@@ -84,11 +84,12 @@ class DocumentFilter:
                 if date_to and pub_date > date_to:
                     continue
             
-            # Check playlists (for future use)
+            # Check playlists
             playlists = self.filters.get('playlists', [])
             if playlists:
                 doc_playlists = metadata.get('playlists', [])
-                if not any(playlist_id in doc_playlists for playlist_id in playlists):
+                # Check if any of the selected playlists match the document's playlists
+                if not any(playlist in doc_playlists for playlist in playlists):
                     continue
             
             # Document passed all filters

@@ -7,15 +7,20 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from core import consts
 from core import utils
 from core.config import Config
-from legacy.agents.load_faiss import LoaderFAISS
+from data_pipeline.simple_faiss_loader import SimpleFAISSLoader
 from data_pipeline.metadata_enhancer import MetadataEnhancer
+from data_pipeline.playlist_fetcher import PlaylistFetcher
 
 def main():
 
   # init
   config = Config(consts.CONFIG_PATH)
-  loader = LoaderFAISS(config)
+  loader = SimpleFAISSLoader(config)
   enhancer = MetadataEnhancer()
+  
+  # Load playlist data if available
+  playlist_fetcher = PlaylistFetcher()  # API key not needed for loading
+  playlist_data_loaded = playlist_fetcher.load_playlist_data()
 
   # print config
   print(f'[loader] embeddings model = {config.embeddings_model()}')
@@ -79,6 +84,18 @@ def main():
       with open(f'captions/{filename}') as f:
         content = f.read()
       
+      # Add playlist information if available
+      if playlist_data_loaded:
+        playlists = playlist_fetcher.get_video_playlists(video_id)
+        if playlists:
+          metadata['playlists'] = [p['title'] for p in playlists]
+          metadata['playlist_ids'] = [p['id'] for p in playlists]
+          metadata['playlist_count'] = len(playlists)
+        else:
+          metadata['playlists'] = []
+          metadata['playlist_ids'] = []
+          metadata['playlist_count'] = 0
+      
       # enhance metadata with content for quality scoring
       metadata['content'] = content
       enhanced_metadata = enhancer.enhance_metadata(metadata)
@@ -89,6 +106,8 @@ def main():
       print(f'[loader][{index}/{len(all_files)}] adding {video_id} to database...')
       print(f'  Category: {enhanced_metadata.get("category", "unknown")}')
       print(f'  Quality: {enhanced_metadata.get("quality_score", "unknown")}')
+      if enhanced_metadata.get('playlists'):
+        print(f'  Playlists: {", ".join(enhanced_metadata["playlists"][:2])}{"..." if len(enhanced_metadata["playlists"]) > 2 else ""}')
       loader.add_text(content, enhanced_metadata)
     
       # update index

@@ -256,7 +256,8 @@ class MetadataEnhancer:
             'date_range': {
                 'earliest': None,
                 'latest': None
-            }
+            },
+            'playlists': {}
         }
         
         # Initialize counters
@@ -296,6 +297,13 @@ class MetadataEnhancer:
                     earliest_date = pub_date
                 if not latest_date or pub_date > latest_date:
                     latest_date = pub_date
+            
+            # Playlist counts
+            playlists = metadata.get('playlists', [])
+            for playlist in playlists:
+                if playlist not in stats['playlists']:
+                    stats['playlists'][playlist] = 0
+                stats['playlists'][playlist] += 1
         
         # Calculate caption percentage
         if stats['total_documents'] > 0:

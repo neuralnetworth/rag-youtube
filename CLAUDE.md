@@ -43,7 +43,10 @@ GOOGLE_API_KEY=XXXX uv run python src/data_pipeline/list_videos.py VIDEO_ID
 # Download captions for all videos
 uv run python src/data_pipeline/download_captions.py
 
-# Load documents into vector database
+# Fetch playlist data (optional but recommended for filtering)
+GOOGLE_API_KEY=XXXX uv run python src/data_pipeline/playlist_fetcher.py
+
+# Load documents into vector database with enhanced metadata
 # For FAISS setup:
 uv run python src/data_pipeline/document_loader_faiss.py
 # For ChromaDB setup:
@@ -122,9 +125,10 @@ uv run python test/test_fastapi.py
 ### Web Interface
 
 - **Current Status**: ✅ Modern FastAPI backend with vanilla JavaScript frontend
-- **Features**: Real-time streaming, responsive design, source attribution
+- **Features**: Real-time streaming, responsive design, source attribution, advanced filtering
 - **API**: RESTful endpoints with OpenAPI documentation
 - **Database**: SQLite for monitoring and FAISS for vector storage
+- **Filtering**: Category, quality, playlist, date range, and caption availability filters
 
 ### Configuration System
 
@@ -147,11 +151,12 @@ uv run python test/test_fastapi.py
 
 ### SpotGamma Implementation Status
 - ✅ **341 SpotGamma videos** listed from channel
-- ✅ **192 videos with captions** downloaded and processed
-- ✅ **2,413 document chunks** indexed in FAISS vector store
+- ✅ **193 videos with captions** downloaded and processed
+- ✅ **2,500+ document chunks** indexed in FAISS vector store with enhanced metadata
 - ✅ **OpenAI GPT-4.1 integration** working (switched from o3 for better RAG performance)
-- ✅ **Basic Q&A pipeline** functional with source attribution
-- ✅ **Test suite** covering vector store, agent QA, and end-to-end functionality
+- ✅ **Advanced content filtering** by category, quality, playlist, and date
+- ✅ **Playlist data integration** from 8 SpotGamma playlists
+- ✅ **Test suite** covering vector store, filters, and end-to-end functionality
 
 ### Known Working Commands
 ```bash
@@ -168,11 +173,13 @@ uv run python test/test_fastapi.py
 # http://localhost:8000
 ```
 
-### Status: ✅ COMPLETE
+### Status: ✅ COMPLETE WITH FILTERING
 - **✅ FastAPI Web Interface**: Modern, responsive UI with real-time streaming
+- **✅ Advanced Filtering**: Category, quality, playlist, date, and caption filters
 - **✅ Clean Dependencies**: No LangChain complexity, minimal requirements
-- **✅ Production Ready**: Sub-5 second response times, 2,413 documents indexed
+- **✅ Production Ready**: Sub-5 second response times, 2,500+ documents indexed
 - **✅ Source Attribution**: Direct YouTube links with relevance scores
+- **✅ Enhanced Metadata**: Automatic category inference and quality scoring
 
 ## Development Notes
 
@@ -184,7 +191,8 @@ rag-youtube/
 │   │   ├── main.py        # FastAPI application
 │   │   ├── rag_engine.py  # Simplified RAG logic
 │   │   ├── models.py      # Pydantic schemas  
-│   │   └── config_fastapi.py # API configuration
+│   │   ├── config_fastapi.py # API configuration
+│   │   └── filters.py     # Document filtering logic
 │   ├── core/              # ✅ Shared utilities
 │   │   ├── config.py      # System configuration
 │   │   ├── consts.py      # Constants
@@ -194,7 +202,10 @@ rag-youtube/
 │   │   ├── list_videos.py # YouTube video discovery
 │   │   ├── download_captions.py # Caption downloading
 │   │   ├── downloader.py  # yt-dlp wrapper
-│   │   └── document_loader_faiss.py # FAISS loading
+│   │   ├── document_loader_faiss.py # FAISS loading with metadata
+│   │   ├── metadata_enhancer.py # Category/quality inference
+│   │   ├── playlist_fetcher.py # YouTube playlist data
+│   │   └── simple_faiss_loader.py # Simplified FAISS loader
 │   ├── vector_stores/     # ✅ Vector store implementations
 │   │   ├── faiss.py       # FAISS vector store
 │   │   └── migrate_faiss_to_chroma.py # Migration utility
@@ -269,6 +280,39 @@ Use the provided migration script to preserve embeddings when switching:
 # Update config after migration
 # Set embeddings model back to local model
 # Update db_persist_dir if needed
+```
+
+## Content Filtering System
+
+The application includes a comprehensive filtering system that enhances search precision:
+
+### Filter Types and Implementation
+
+1. **Metadata Enhancement** (`metadata_enhancer.py`)
+   - Automatically infers video categories using pattern matching
+   - Calculates quality scores based on transcript density (WPM) and technical keywords
+   - Parses and normalizes dates for consistent filtering
+
+2. **Document Filtering** (`filters.py`)
+   - In-memory filtering with AND logic across all filter types
+   - Over-fetching strategy (3x) to ensure quality results despite filtering
+   - Efficient document processing without re-querying vector store
+
+3. **Available Filters**
+   - **Caption Filter**: Only search videos with transcripts
+   - **Category Filter**: daily_update, educational, interview, special_event
+   - **Quality Filter**: high, medium, low (based on content density)
+   - **Playlist Filter**: Multi-select from channel playlists
+   - **Date Range**: Filter by video publication date
+
+### Testing Filtering Features
+
+```bash
+# Run filtering-specific tests
+uv run python test/test_filtering.py
+
+# Test filter statistics API
+curl http://localhost:8000/api/filters/options
 ```
 
 ## Working with Multiple YouTube Channels

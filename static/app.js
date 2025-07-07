@@ -24,6 +24,8 @@ const qualityCount = document.getElementById('quality-count');
 const dateFrom = document.getElementById('date-from');
 const dateTo = document.getElementById('date-to');
 const dateRangeInfo = document.getElementById('date-range-info');
+const playlistFilter = document.getElementById('playlist-filter');
+const playlistInfo = document.getElementById('playlist-info');
 const clearFiltersBtn = document.getElementById('clear-filters-btn');
 
 // State
@@ -70,6 +72,22 @@ async function loadFilterOptions() {
             dateRangeInfo.textContent = `(${formatDate(filterData.date_range.earliest)} - ${formatDate(filterData.date_range.latest)})`;
         }
         
+        // Populate playlist options
+        if (filterData.playlists) {
+            playlistFilter.innerHTML = '';
+            
+            // Sort playlists by count (descending)
+            const sortedPlaylists = Object.entries(filterData.playlists)
+                .sort((a, b) => b[1] - a[1]);
+            
+            for (const [playlist, count] of sortedPlaylists) {
+                const option = document.createElement('option');
+                option.value = playlist;
+                option.textContent = `${playlist} (${count} videos)`;
+                playlistFilter.appendChild(option);
+            }
+        }
+        
     } catch (error) {
         console.error('Error loading filter options:', error);
     }
@@ -111,6 +129,7 @@ function setupEventListeners() {
     requireCaptionsCheckbox.addEventListener('change', updateFilterDisplay);
     categoryFilter.addEventListener('change', updateFilterDisplay);
     qualityFilter.addEventListener('change', updateFilterDisplay);
+    playlistFilter.addEventListener('change', updateFilterDisplay);
     dateFrom.addEventListener('change', updateFilterDisplay);
     dateTo.addEventListener('change', updateFilterDisplay);
     
@@ -127,6 +146,7 @@ function updateFilterDisplay() {
     const hasActiveFilters = requireCaptionsCheckbox.checked || 
                            categoryFilter.value || 
                            qualityFilter.value || 
+                           playlistFilter.selectedOptions.length > 0 ||
                            dateFrom.value || 
                            dateTo.value;
     
@@ -138,6 +158,7 @@ function clearAllFilters() {
     requireCaptionsCheckbox.checked = false;
     categoryFilter.value = '';
     qualityFilter.value = '';
+    playlistFilter.selectedIndex = -1;  // Clear multi-select
     dateFrom.value = '';
     dateTo.value = '';
     updateFilterDisplay();
@@ -157,6 +178,10 @@ function buildFilters() {
     
     if (qualityFilter.value) {
         filters.quality_levels = [qualityFilter.value];
+    }
+    
+    if (playlistFilter.selectedOptions.length > 0) {
+        filters.playlists = Array.from(playlistFilter.selectedOptions).map(opt => opt.value);
     }
     
     if (dateFrom.value) {
