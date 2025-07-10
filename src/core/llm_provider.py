@@ -75,19 +75,16 @@ class OpenAIProvider(LLMProvider):
         """Get model-specific parameters."""
         model = kwargs.get('model', self.model)
         params = {
-            'model': model,
-            'max_tokens': kwargs.get('max_tokens', 1000)
+            'model': model
         }
         
-        # Only add temperature if explicitly provided
-        if 'temperature' in kwargs:
-            params['temperature'] = kwargs['temperature']
+        # Only add max_tokens if explicitly provided
+        if 'max_tokens' in kwargs:
+            params['max_tokens'] = kwargs['max_tokens']
         
-        # o3 models use different parameter names and don't support temperature
-        if model.startswith("o3"):
-            params['max_completion_tokens'] = params.pop('max_tokens')
-            # Remove temperature for o3 models as it's not supported
-            params.pop('temperature', None)
+        # Only add temperature if explicitly provided (except for o3 models)
+        if 'temperature' in kwargs and not model.startswith("o3"):
+            params['temperature'] = kwargs['temperature']
         
         return params
     
