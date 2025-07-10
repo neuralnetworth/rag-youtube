@@ -5,6 +5,7 @@ Adapted from PocketFlow-YT-Summarizer architecture.
 """
 import os
 import time
+import asyncio
 import logging
 from typing import Optional, AsyncGenerator, Dict, Any
 from abc import ABC, abstractmethod

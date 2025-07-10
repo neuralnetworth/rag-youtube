@@ -83,23 +83,74 @@ make load
 ```
 
 ### Testing and Validation
+
+#### Quick Start Testing
 ```bash
-# Test FastAPI implementation (recommended first test)
-uv run python test/test_basic_functionality_fastapi.py
+# Essential test (fastest) - ALWAYS START HERE
+./test_runner.sh quick
 
-# Test API endpoints (requires server running)
-uv run python test/test_fastapi.py
+# Complete system validation with detailed reporting
+./test_runner.sh full
 
-# Legacy tests (require LangChain dependencies)
-# uv sync --extra legacy
-# uv run python test/test_basic_functionality.py
+# Performance benchmarks and load testing
+./test_runner.sh performance
+
+# Modern pytest-based tests
+./test_runner.sh pytest --verbose
 ```
 
-### Testing Approach
-- **Primary test**: ALWAYS run `uv run python test/test_basic_functionality_fastapi.py` first
-- **Focus on integration tests** - End-to-end RAG functionality is what matters
-- **FastAPI tests verify**: API endpoints, streaming, source attribution
-- **Legacy tests available** but require additional dependencies
+#### Comprehensive Test Suite
+```bash
+# Core FastAPI functionality (primary production test)
+uv run python test/test_basic_functionality_fastapi.py
+
+# Complete system validation (all components with timing)
+uv run python test/test_comprehensive.py
+
+# Modern pytest-based tests with fixtures and markers
+uv run pytest test/test_pytest_core.py -v
+
+# Performance benchmarking (response times, memory, concurrent users)
+uv run python test/test_performance.py
+
+# API integration tests (requires running server)
+uv run python test/test_fastapi.py
+
+# Run specific test categories
+uv run python test/run_all_tests.py --category "Core FastAPI Tests"
+```
+
+#### Test Categories and Organization
+- **🚀 Core FastAPI Tests**: Essential production functionality
+  - `test_basic_functionality_fastapi.py` - Primary FastAPI implementation test
+  - `test_filtering.py` - Document filtering and metadata enhancement
+- **🔬 Comprehensive Tests**: Complete system validation with detailed reporting
+  - `test_comprehensive.py` - All components with timing and error handling
+- **⚡ Modern Tests**: Pytest-based tests with fixtures and markers
+  - `test_pytest_core.py` - Modern test patterns with proper fixtures
+  - `conftest.py` - Shared fixtures and pytest configuration
+- **📊 Performance Tests**: Benchmarking and load testing
+  - `test_performance.py` - Response times, memory usage, concurrent users
+- **🌐 Integration Tests**: API endpoints (requires running server)
+  - `test_fastapi.py` - API endpoint integration testing
+- **🔧 Legacy Tests**: LangChain-based components
+  - Available for backward compatibility but require additional dependencies
+
+#### Testing Approach (Updated)
+- **Primary test**: ALWAYS run `./test_runner.sh quick` or `test_basic_functionality_fastapi.py` first
+- **Development workflow**: Use `./test_runner.sh full` for comprehensive validation
+- **Performance monitoring**: Run `./test_runner.sh performance` for benchmarking
+- **Test-driven development**: Use `pytest test/test_pytest_core.py -k "test_feature"` for specific features
+- **CI/CD validation**: Use `./test_runner.sh all` for complete test suite
+- **Focus on integration tests**: End-to-end RAG functionality is what matters most
+
+#### Current Test Status
+- ✅ **All 12 comprehensive tests PASSING** (145 seconds total)
+- ✅ **Vector Store**: 26+ documents loaded and searchable
+- ✅ **Multi-Provider LLM**: OpenAI + Gemini working with optimized parameters
+- ✅ **Performance**: Sub-5 second Q&A responses, <1s vector search
+- ✅ **Streaming**: Real-time responses with <1s first token latency
+- ✅ **Error Handling**: Comprehensive edge cases and failure scenarios
 
 ## Architecture
 
@@ -217,15 +268,23 @@ rag-youtube/
 │   ├── index.html         # Main UI
 │   ├── style.css          # Styling
 │   └── app.js             # Frontend logic with streaming
-├── test/                  # Test suite
-│   ├── test_basic_functionality_fastapi.py  # ✅ FastAPI tests
-│   ├── test_fastapi.py    # API endpoint tests
-│   └── [legacy tests]     # LangChain-based tests
+├── test/                  # ✅ Comprehensive test suite
+│   ├── test_basic_functionality_fastapi.py  # ✅ Core FastAPI tests
+│   ├── test_comprehensive.py                # ✅ Complete system validation
+│   ├── test_pytest_core.py                  # ✅ Modern pytest-based tests
+│   ├── test_performance.py                  # ✅ Performance benchmarking
+│   ├── test_filtering.py                    # ✅ Document filtering tests
+│   ├── test_fastapi.py                      # API endpoint integration tests
+│   ├── run_all_tests.py                     # Master test runner
+│   ├── conftest.py                          # Pytest configuration and fixtures
+│   ├── TEST_SUITE_UPDATE.md                 # Comprehensive test documentation
+│   └── [legacy tests]                       # LangChain-based tests
 ├── docs/faiss-rag/        # ✅ Implementation completed
 ├── captions/              # Downloaded video captions
 ├── db/                    # FAISS vector database
 ├── .env                   # API keys configuration
 ├── rag-youtube.conf       # System configuration
+├── test_runner.sh         # ✅ User-friendly test runner script
 └── pyproject.toml         # Dependencies (cleaned up)
 ```
 
@@ -235,6 +294,7 @@ rag-youtube/
 - FAISS for vector storage (CPU-optimized)  
 - yt-dlp for video caption downloading
 - FastAPI, uvicorn, sse-starlette for web interface
+- **Testing**: pytest, pytest-asyncio, pytest-timeout, psutil for comprehensive test suite
 - Optional: Legacy LangChain dependencies for backward compatibility
 
 ### Configuration

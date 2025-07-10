@@ -28,10 +28,22 @@ dependencies = [
 [project.optional-dependencies]
 # Development dependencies
 dev = [
-    "pytest",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-timeout>=2.1.0",
     "black",
     "isort", 
     "flake8",
+    "psutil",  # For memory monitoring in performance tests
+]
+
+# Testing dependencies
+test = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-timeout>=2.1.0",
+    "pytest-cov",  # Coverage reporting
+    "psutil",      # Memory monitoring
 ]
 
 [build-system]
