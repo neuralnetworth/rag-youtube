@@ -14,7 +14,7 @@ from data_pipeline.playlist_fetcher import PlaylistFetcher
 def main():
 
   # init
-  config = Config(consts.CONFIG_PATH)
+  config = Config()
   loader = SimpleFAISSLoader(config)
   enhancer = MetadataEnhancer()
   

@@ -322,16 +322,37 @@ We switched from OpenAI o3 to GPT-4.1 for RAG synthesis tasks. The o3 model is o
 - **Future Flexibility**: Architecture supports experimenting with different models for different pipeline stages
 - **Comprehensive Analysis**: See `docs/model-strategy.md` for detailed model comparison and selection criteria
 
-### Temperature Parameter Handling
+### LLM Parameter Optimization (2025)
 
-The system now uses model-specific default temperatures instead of a global setting:
+The system uses optimal parameter handling based on extensive research into model-specific requirements and limitations.
 
-- **OpenAI GPT-4.1**: Uses default temperature of 1.0
-- **Google Gemini**: Uses model-specific defaults
-- **OpenAI o3**: Temperature parameter is not supported (would cause API errors)
-- **Custom Override**: Temperature can still be specified per-request when needed
+#### Temperature Parameter Handling
 
-This approach ensures compatibility with all model types while avoiding API errors with reasoning models like o3.
+**Key Finding**: Never use global temperature settings. Model defaults are optimal.
+
+- **All Models**: Use native default temperatures (no global LLM_TEMPERATURE in .env)
+- **OpenAI o3**: Temperature parameter NOT supported (causes API errors)
+- **OpenAI GPT-4.1**: Supports temperature, default 1.0 is optimal
+- **Google Gemini**: Supports temperature, model defaults work best
+- **Override**: Only when explicitly requested by user per-request
+
+#### Token Limit Optimization
+
+**Key Finding**: Model-specific parameter handling prevents API errors.
+
+- **Gemini Models**: NEVER set max_output_tokens (known API bug with 2.5 Pro)
+- **OpenAI GPT-4.1**: Safe to use max_tokens parameter (default: unlimited)
+- **OpenAI o3**: Use max_completion_tokens (NOT max_tokens)
+- **Best Practice**: Let all models use their native defaults
+
+#### Documentation
+
+Comprehensive guides available:
+- `docs/temperature-parameter-guide.md` - Temperature optimization research
+- `docs/gemini-token-optimization.md` - Gemini-specific token handling
+- `docs/openai-token-optimization.md` - OpenAI parameter comparison
+
+This approach ensures maximum compatibility and performance across all supported LLM providers.
 
 ## 🔄 Migration Between Setups
 

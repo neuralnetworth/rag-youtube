@@ -189,9 +189,14 @@ class GeminiProvider(LLMProvider):
     
     def _get_generation_config(self, **kwargs):
         """Get generation configuration for Gemini."""
-        config = {
-            'max_output_tokens': kwargs.get('max_tokens', 1000)
-        }
+        config = {}
+        
+        # Only set max_output_tokens if explicitly provided
+        # Due to known issues with Gemini 2.5 Pro, avoid setting this by default
+        if 'max_tokens' in kwargs:
+            # Cap at 8192 (standard Gemini API limit) for safety
+            max_tokens = min(kwargs['max_tokens'], 8192)
+            config['max_output_tokens'] = max_tokens
         
         # Only add temperature if explicitly provided
         if 'temperature' in kwargs:
@@ -228,9 +233,7 @@ class GeminiProvider(LLMProvider):
                         return candidate.content.parts[0].text
             
             # Extract text response
-            if hasattr(response, 'text') and response.text:
-                return response.text
-            elif candidate.content.parts:
+            if candidate.content.parts:
                 return candidate.content.parts[0].text
             else:
                 raise Exception("No valid response text returned from Gemini API")

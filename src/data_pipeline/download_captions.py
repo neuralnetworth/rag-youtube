@@ -3,6 +3,10 @@ import os
 import sys
 import json
 import html
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from data_pipeline.downloader import Downloader
 
 def main():

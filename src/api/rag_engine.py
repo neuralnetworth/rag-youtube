@@ -114,9 +114,10 @@ Please provide a comprehensive answer based on the context above."""
         # Get the appropriate provider
         llm_provider = self.llm_manager.get_provider(provider) if provider else self.provider
         
-        kwargs = {"max_tokens": 1000}
+        kwargs = {}
         if temperature is not None:
             kwargs["temperature"] = temperature
+        # Let Gemini use its default max_tokens for optimal performance
         
         return llm_provider.generate(messages, **kwargs)
     
@@ -142,9 +143,10 @@ Please provide a comprehensive answer based on the context above."""
         # Get the appropriate provider
         llm_provider = self.llm_manager.get_provider(provider) if provider else self.provider
         
-        kwargs = {"max_tokens": 1000}
+        kwargs = {}
         if temperature is not None:
             kwargs["temperature"] = temperature
+        # Let Gemini use its default max_tokens for optimal performance
         
         return await llm_provider.generate_async(messages, **kwargs)
     
@@ -176,9 +178,10 @@ Please provide a comprehensive answer based on the context above."""
         # Get the appropriate provider
         llm_provider = self.llm_manager.get_provider(provider) if provider else self.provider
         
-        kwargs = {"max_tokens": 1000}
+        kwargs = {}
         if temperature is not None:
             kwargs["temperature"] = temperature
+        # Let Gemini use its default max_tokens for optimal performance
         
         async for chunk in llm_provider.generate_stream(messages, **kwargs):
             yield chunk
