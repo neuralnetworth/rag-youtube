@@ -253,7 +253,19 @@ We've implemented a flexible model selection approach documented in `docs/model-
 - **NEVER use OpenAI o3 for RAG synthesis** - It's a reasoning model, not generative
 - **ALWAYS use GPT-4.1** (gpt-4.1-2025-04-14) for answer generation
 - **Parameter compatibility**: GPT-4.1 uses `max_tokens`, o3 uses `max_completion_tokens`
+- **Temperature handling**: o3 models do NOT support temperature parameter (will cause API errors)
 - **Verify changes** with `test_basic_functionality.py` after model modifications
+
+### Temperature Parameter Handling
+The system now uses model-specific default temperatures instead of a global `LLM_TEMPERATURE` setting:
+
+- **Removed from configuration**: No more `LLM_TEMPERATURE` in `.env` files
+- **Model defaults**: Each model uses its optimal default temperature
+  - OpenAI GPT-4.1: 1.0 (default)
+  - Google Gemini: Model-specific defaults
+  - OpenAI o3: Temperature not supported (parameter excluded entirely)
+- **Per-request override**: Temperature can still be specified when calling API endpoints
+- **Compatibility**: Prevents API errors with reasoning models that don't support temperature
 
 ## Dual Setup Support
 

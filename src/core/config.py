@@ -75,9 +75,6 @@ class Config:
         """Get the actual LLM provider (openai, gemini)."""
         return self._get_env('LLM_PROVIDER', 'openai').lower()
     
-    def llm_temperature(self) -> float:
-        return self._get_env_float('LLM_TEMPERATURE', consts.DEFAULT_LLM_TEMPERATURE)
-    
     # OpenAI settings
     def openai_api_key(self) -> Optional[str]:
         return self._get_env('OPENAI_API_KEY')

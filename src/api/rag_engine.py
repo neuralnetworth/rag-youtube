@@ -31,9 +31,6 @@ class RAGEngine:
         # Initialize LLM manager with multi-provider support
         self.llm_manager = LLMManager(config)
         
-        # Model configuration
-        self.temperature = config.llm_temperature()
-        
         # Get current provider info
         self.current_provider = os.getenv("LLM_PROVIDER", "openai").lower()
         try:
@@ -97,8 +94,6 @@ class RAGEngine:
     
     def generate_answer(self, question: str, context: str, temperature: float = None, provider: str = None) -> str:
         """Generate answer using the specified or default LLM provider."""
-        if temperature is None:
-            temperature = self.temperature
             
         system_prompt = """You are a helpful assistant analyzing YouTube video content about financial markets and options trading.
 Answer questions based on the provided context from video transcripts. If the answer isn't in the context, say so.
@@ -119,12 +114,14 @@ Please provide a comprehensive answer based on the context above."""
         # Get the appropriate provider
         llm_provider = self.llm_manager.get_provider(provider) if provider else self.provider
         
-        return llm_provider.generate(messages, temperature=temperature, max_tokens=1000)
+        kwargs = {"max_tokens": 1000}
+        if temperature is not None:
+            kwargs["temperature"] = temperature
+        
+        return llm_provider.generate(messages, **kwargs)
     
     async def generate_answer_async(self, question: str, context: str, temperature: float = None, provider: str = None) -> str:
         """Async version of generate_answer."""
-        if temperature is None:
-            temperature = self.temperature
             
         system_prompt = """You are a helpful assistant analyzing YouTube video content about financial markets and options trading.
 Answer questions based on the provided context from video transcripts. If the answer isn't in the context, say so.
@@ -145,7 +142,11 @@ Please provide a comprehensive answer based on the context above."""
         # Get the appropriate provider
         llm_provider = self.llm_manager.get_provider(provider) if provider else self.provider
         
-        return await llm_provider.generate_async(messages, temperature=temperature, max_tokens=1000)
+        kwargs = {"max_tokens": 1000}
+        if temperature is not None:
+            kwargs["temperature"] = temperature
+        
+        return await llm_provider.generate_async(messages, **kwargs)
     
     async def generate_answer_stream(
         self, 
@@ -155,8 +156,6 @@ Please provide a comprehensive answer based on the context above."""
         provider: str = None
     ) -> AsyncGenerator[str, None]:
         """Stream answer generation using the specified or default LLM provider."""
-        if temperature is None:
-            temperature = self.temperature
             
         system_prompt = """You are a helpful assistant analyzing YouTube video content about financial markets and options trading.
 Answer questions based on the provided context from video transcripts. If the answer isn't in the context, say so.
@@ -177,7 +176,11 @@ Please provide a comprehensive answer based on the context above."""
         # Get the appropriate provider
         llm_provider = self.llm_manager.get_provider(provider) if provider else self.provider
         
-        async for chunk in llm_provider.generate_stream(messages, temperature=temperature, max_tokens=1000):
+        kwargs = {"max_tokens": 1000}
+        if temperature is not None:
+            kwargs["temperature"] = temperature
+        
+        async for chunk in llm_provider.generate_stream(messages, **kwargs):
             yield chunk
     
     def ask(

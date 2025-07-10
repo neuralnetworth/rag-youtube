@@ -322,6 +322,17 @@ We switched from OpenAI o3 to GPT-4.1 for RAG synthesis tasks. The o3 model is o
 - **Future Flexibility**: Architecture supports experimenting with different models for different pipeline stages
 - **Comprehensive Analysis**: See `docs/model-strategy.md` for detailed model comparison and selection criteria
 
+### Temperature Parameter Handling
+
+The system now uses model-specific default temperatures instead of a global setting:
+
+- **OpenAI GPT-4.1**: Uses default temperature of 1.0
+- **Google Gemini**: Uses model-specific defaults
+- **OpenAI o3**: Temperature parameter is not supported (would cause API errors)
+- **Custom Override**: Temperature can still be specified per-request when needed
+
+This approach ensures compatibility with all model types while avoiding API errors with reasoning models like o3.
+
 ## 🔄 Migration Between Setups
 
 Move from CPU (FAISS) to GPU (ChromaDB) setup:

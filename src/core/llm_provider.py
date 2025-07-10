@@ -75,14 +75,18 @@ class OpenAIProvider(LLMProvider):
         model = kwargs.get('model', self.model)
         params = {
             'model': model,
-            'temperature': kwargs.get('temperature', 0.7),
             'max_tokens': kwargs.get('max_tokens', 1000)
         }
         
-        # o3 models use different parameter names
+        # Only add temperature if explicitly provided
+        if 'temperature' in kwargs:
+            params['temperature'] = kwargs['temperature']
+        
+        # o3 models use different parameter names and don't support temperature
         if model.startswith("o3"):
             params['max_completion_tokens'] = params.pop('max_tokens')
-            params['temperature'] = 1  # o3 only supports temperature=1
+            # Remove temperature for o3 models as it's not supported
+            params.pop('temperature', None)
         
         return params
     
@@ -185,10 +189,15 @@ class GeminiProvider(LLMProvider):
     
     def _get_generation_config(self, **kwargs):
         """Get generation configuration for Gemini."""
-        return self.genai.types.GenerationConfig(
-            max_output_tokens=kwargs.get('max_tokens', 1000),
-            temperature=kwargs.get('temperature', 0.7),
-        )
+        config = {
+            'max_output_tokens': kwargs.get('max_tokens', 1000)
+        }
+        
+        # Only add temperature if explicitly provided
+        if 'temperature' in kwargs:
+            config['temperature'] = kwargs['temperature']
+        
+        return self.genai.types.GenerationConfig(**config)
     
     def generate(self, messages: list, **kwargs) -> str:
         """Generate response using Gemini."""
@@ -214,10 +223,9 @@ class GeminiProvider(LLMProvider):
                 if candidate.finish_reason == 3:  # SAFETY
                     raise Exception("Content was blocked by safety filters")
                 elif candidate.finish_reason == 2:  # MAX_TOKENS
+                    # For max tokens, just return what we got
                     if hasattr(candidate.content, 'parts') and candidate.content.parts:
                         return candidate.content.parts[0].text
-                    else:
-                        raise Exception("Response was truncated due to max tokens limit")
             
             # Extract text response
             if hasattr(response, 'text') and response.text:

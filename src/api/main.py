@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
     
     # Startup
     print("Initializing RAG engine...")
-    config = Config(consts.CONFIG_PATH)
+    config = Config()
     rag_engine = RAGEngine(config)
     print("RAG engine initialized successfully")
     

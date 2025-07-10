@@ -104,7 +104,7 @@ def test_filter_statistics():
     print("Testing Filter Statistics")
     print("="*60)
     
-    config = Config(consts.CONFIG_PATH)
+    config = Config()
     rag_engine = RAGEngine(config)
     
     try:
@@ -144,7 +144,7 @@ def test_basic_rag():
     print("="*60)
     
     # Initialize
-    config = Config(consts.CONFIG_PATH)
+    config = Config()
     rag_engine = RAGEngine(config)
     
     # Test questions
@@ -196,7 +196,8 @@ def test_basic_rag():
     stats = rag_engine.get_stats()
     print(f"Total documents: {stats['total_documents']}")
     print(f"Index size: {stats['index_size']}")
-    print(f"Model: {stats['model']}")
+    print(f"Current provider: {stats['current_provider']}")
+    print(f"Available providers: {stats['available_providers']}")
     print(f"Embeddings model: {stats['embeddings_model']}")
 
 
@@ -206,7 +207,7 @@ def test_filtered_search():
     print("Testing Filtered Search")
     print("="*60)
     
-    config = Config(consts.CONFIG_PATH)
+    config = Config()
     rag_engine = RAGEngine(config)
     
     # Test question with caption filter
