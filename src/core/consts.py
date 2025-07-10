@@ -1,6 +1,6 @@
 
 # paths
-CONFIG_PATH = './rag-youtube.conf'
+# CONFIG_PATH is deprecated - using .env file instead
 
 # defaults
 DEFAULT_DEBUG = 'false'

@@ -3,12 +3,14 @@ name = "rag-youtube"
 version = "0.1.0"
 description = "RAG system for YouTube channel analysis using FAISS and OpenAI"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
-    # Core dependencies for OpenAI-based setup
+    # Core dependencies for multi-provider setup
     "google-api-python-client",
     "requests",
     "openai",
+    "google-generativeai>=0.8.0",
+    "python-dotenv>=1.0.0",
     "yt-dlp",
     # FAISS for vector storage
     "faiss-cpu",

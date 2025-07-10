@@ -20,11 +20,22 @@ class FAISSVectorStore:
         self.metadata = []
         self.dimension = 1536  # OpenAI embedding dimension
         
-        # Initialize OpenAI client
-        self.client = OpenAI(
-            api_key=config.openai_api_key(),
-            organization=config.openai_org_id()
-        )
+        # Initialize embeddings client based on provider
+        embeddings_provider = config.embeddings_provider() if hasattr(config, 'embeddings_provider') else 'openai'
+        
+        if embeddings_provider == 'openai':
+            # Initialize OpenAI client for embeddings
+            api_key = config.openai_api_key()
+            if not api_key:
+                raise ValueError("OpenAI API key is required for embeddings. Please set OPENAI_API_KEY in your .env file.")
+            
+            self.client = OpenAI(
+                api_key=api_key,
+                organization=config.openai_org_id()
+            )
+            self.embeddings_model = config.embeddings_model() if hasattr(config, 'embeddings_model') else 'text-embedding-3-small'
+        else:
+            raise ValueError(f"Unsupported embeddings provider: {embeddings_provider}. Currently only 'openai' is supported.")
         
         # Create persist directory if it doesn't exist
         os.makedirs(persist_directory, exist_ok=True)
@@ -72,7 +83,7 @@ class FAISSVectorStore:
         
         # Get embeddings from OpenAI
         response = self.client.embeddings.create(
-            model="text-embedding-3-small",  # Cheaper and faster than ada-002
+            model=self.embeddings_model,
             input=texts
         )
         

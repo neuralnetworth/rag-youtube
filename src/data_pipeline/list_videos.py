@@ -2,6 +2,7 @@
 import os
 import sys
 import json
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from data_pipeline.downloader import Downloader
 from googleapiclient.discovery import build
 

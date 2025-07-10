@@ -11,6 +11,7 @@ class QuestionRequest(BaseModel):
     num_sources: int = Field(default=4, ge=1, le=10, description="Number of sources to retrieve")
     search_type: str = Field(default="similarity", pattern="^(similarity|mmr|similarity_score_threshold)$")
     temperature: float = Field(default=0.7, ge=0, le=2, description="LLM temperature")
+    provider: Optional[str] = Field(default=None, description="LLM provider to use (openai, gemini)")
     stream: bool = Field(default=False, description="Enable streaming response")
     filters: Optional[Dict[str, Any]] = Field(default=None, description="Document filters")
 
@@ -43,7 +44,8 @@ class SystemStats(BaseModel):
     total_documents: int = Field(..., description="Total documents in vector store")
     embedding_dimension: int = Field(..., description="Dimension of embeddings")
     index_size: int = Field(..., description="Size of FAISS index")
-    model: str = Field(..., description="Current LLM model")
+    current_provider: str = Field(..., description="Currently active LLM provider")
+    available_providers: List[str] = Field(..., description="Available LLM providers")
     embeddings_model: str = Field(..., description="Current embeddings model")
     version: str = Field(default="1.0.0", description="API version")
 

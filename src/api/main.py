@@ -149,6 +149,37 @@ async def get_filter_options():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/providers")
+async def list_providers():
+    """List available LLM providers."""
+    try:
+        available_providers = rag_engine.llm_manager.list_providers()
+        current_provider = rag_engine.current_provider
+        
+        return {
+            "available_providers": available_providers,
+            "current_provider": current_provider,
+            "total_providers": len(available_providers)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/providers/test")
+async def test_providers():
+    """Test all available LLM providers."""
+    try:
+        results = rag_engine.llm_manager.test_all_providers()
+        
+        return {
+            "test_results": results,
+            "working_providers": [provider for provider, success in results.items() if success],
+            "failed_providers": [provider for provider, success in results.items() if not success]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/ask", response_model=AnswerResponse)
 async def ask_question(request: QuestionRequest):
     """Ask a question and get an answer with sources."""
@@ -158,7 +189,8 @@ async def ask_question(request: QuestionRequest):
             question=request.question,
             num_sources=request.num_sources,
             temperature=request.temperature,
-            filters=request.filters
+            filters=request.filters,
+            provider=request.provider
         )
         
         # Convert sources to response model
@@ -212,7 +244,8 @@ async def ask_question_stream(request: QuestionRequest):
             async for token in rag_engine.generate_answer_stream(
                 request.question, 
                 context, 
-                request.temperature
+                request.temperature,
+                request.provider
             ):
                 chunk = StreamChunk(type="token", content=token)
                 yield {"data": chunk.model_dump_json()}

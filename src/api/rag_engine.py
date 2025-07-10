@@ -7,13 +7,13 @@ import sys
 import time
 import asyncio
 from typing import List, Dict, Any, Optional, AsyncGenerator
-from openai import OpenAI, AsyncOpenAI
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from vector_stores.faiss import FAISSVectorStore
 from core.config import Config
+from core.llm_provider import LLMManager
 from api.models import Source
 from data_pipeline.metadata_enhancer import MetadataEnhancer
 from api.filters import DocumentFilter
@@ -28,19 +28,24 @@ class RAGEngine:
         self.metadata_enhancer = MetadataEnhancer()
         self.document_filter = DocumentFilter()
         
-        # Initialize OpenAI clients
-        self.client = OpenAI(
-            api_key=config.openai_api_key(),
-            organization=config.openai_org_id()
-        )
-        self.async_client = AsyncOpenAI(
-            api_key=config.openai_api_key(),
-            organization=config.openai_org_id()
-        )
+        # Initialize LLM manager with multi-provider support
+        self.llm_manager = LLMManager(config)
         
         # Model configuration
-        self.model = config.openai_model()
         self.temperature = config.llm_temperature()
+        
+        # Get current provider info
+        self.current_provider = os.getenv("LLM_PROVIDER", "openai").lower()
+        try:
+            self.provider = self.llm_manager.get_provider(self.current_provider)
+        except ValueError as e:
+            # Fallback to any available provider
+            available_providers = self.llm_manager.list_providers()
+            if available_providers:
+                self.current_provider = available_providers[0]
+                self.provider = self.llm_manager.get_provider(self.current_provider)
+            else:
+                raise ValueError(f"No LLM providers available: {e}")
         
     def retrieve_sources(self, question: str, num_sources: int = 4, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
         """Retrieve relevant sources from vector store with optional filtering."""
@@ -90,8 +95,8 @@ class RAGEngine:
         
         return "\n".join(context_parts)
     
-    def generate_answer(self, question: str, context: str, temperature: float = None) -> str:
-        """Generate answer using OpenAI."""
+    def generate_answer(self, question: str, context: str, temperature: float = None, provider: str = None) -> str:
+        """Generate answer using the specified or default LLM provider."""
         if temperature is None:
             temperature = self.temperature
             
@@ -106,19 +111,17 @@ Question: {question}
 
 Please provide a comprehensive answer based on the context above."""
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=temperature,
-            max_tokens=1000
-        )
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
         
-        return response.choices[0].message.content
+        # Get the appropriate provider
+        llm_provider = self.llm_manager.get_provider(provider) if provider else self.provider
+        
+        return llm_provider.generate(messages, temperature=temperature, max_tokens=1000)
     
-    async def generate_answer_async(self, question: str, context: str, temperature: float = None) -> str:
+    async def generate_answer_async(self, question: str, context: str, temperature: float = None, provider: str = None) -> str:
         """Async version of generate_answer."""
         if temperature is None:
             temperature = self.temperature
@@ -134,25 +137,24 @@ Question: {question}
 
 Please provide a comprehensive answer based on the context above."""
 
-        response = await self.async_client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=temperature,
-            max_tokens=1000
-        )
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
         
-        return response.choices[0].message.content
+        # Get the appropriate provider
+        llm_provider = self.llm_manager.get_provider(provider) if provider else self.provider
+        
+        return await llm_provider.generate_async(messages, temperature=temperature, max_tokens=1000)
     
     async def generate_answer_stream(
         self, 
         question: str, 
         context: str, 
-        temperature: float = None
+        temperature: float = None,
+        provider: str = None
     ) -> AsyncGenerator[str, None]:
-        """Stream answer generation using OpenAI."""
+        """Stream answer generation using the specified or default LLM provider."""
         if temperature is None:
             temperature = self.temperature
             
@@ -167,27 +169,24 @@ Question: {question}
 
 Please provide a comprehensive answer based on the context above."""
 
-        stream = await self.async_client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=temperature,
-            max_tokens=1000,
-            stream=True
-        )
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
         
-        async for chunk in stream:
-            if chunk.choices[0].delta.content is not None:
-                yield chunk.choices[0].delta.content
+        # Get the appropriate provider
+        llm_provider = self.llm_manager.get_provider(provider) if provider else self.provider
+        
+        async for chunk in llm_provider.generate_stream(messages, temperature=temperature, max_tokens=1000):
+            yield chunk
     
     def ask(
         self, 
         question: str, 
         num_sources: int = 4, 
         temperature: float = None,
-        filters: Dict[str, Any] = None
+        filters: Dict[str, Any] = None,
+        provider: str = None
     ) -> Dict[str, Any]:
         """Simple synchronous Q&A method."""
         start_time = time.time()
@@ -199,7 +198,7 @@ Please provide a comprehensive answer based on the context above."""
         context = self.build_context(sources)
         
         # Generate answer
-        answer = self.generate_answer(question, context, temperature)
+        answer = self.generate_answer(question, context, temperature, provider)
         
         processing_time = time.time() - start_time
         
@@ -215,7 +214,8 @@ Please provide a comprehensive answer based on the context above."""
         question: str, 
         num_sources: int = 4, 
         temperature: float = None,
-        filters: Dict[str, Any] = None
+        filters: Dict[str, Any] = None,
+        provider: str = None
     ) -> Dict[str, Any]:
         """Async Q&A method."""
         start_time = time.time()
@@ -227,7 +227,7 @@ Please provide a comprehensive answer based on the context above."""
         context = self.build_context(sources)
         
         # Generate answer
-        answer = await self.generate_answer_async(question, context, temperature)
+        answer = await self.generate_answer_async(question, context, temperature, provider)
         
         processing_time = time.time() - start_time
         
@@ -245,8 +245,9 @@ Please provide a comprehensive answer based on the context above."""
             'total_documents': stats['total_documents'],
             'embedding_dimension': stats['embedding_dimension'],
             'index_size': stats['index_size'],
-            'model': self.model,
-            'embeddings_model': 'text-embedding-3-small'
+            'current_provider': self.current_provider,
+            'available_providers': self.llm_manager.list_providers(),
+            'embeddings_model': self.config.embeddings_model() if hasattr(self.config, 'embeddings_model') else 'text-embedding-3-small'
         }
     
     def get_filter_statistics(self) -> Dict[str, Any]:
