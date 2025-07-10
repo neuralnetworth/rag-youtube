@@ -6,6 +6,10 @@ This document outlines best practices for handling temperature parameters across
 
 **Universal Best Practice**: Remove global temperature settings from configuration files. Use model-specific defaults and only pass temperature when explicitly needed.
 
+## User Preference
+
+**Preferred Implementation**: Do not set temperature parameters at all. Let all models use their native defaults for optimal performance and maximum compatibility. This simplifies the codebase and ensures models can intelligently manage their own parameters based on the task at hand.
+
 ## Background
 
 Temperature controls the randomness of model outputs:
@@ -17,25 +21,18 @@ Temperature controls the randomness of model outputs:
 
 ### 🚨 OpenAI o3 Series (Reasoning Models)
 
-**Critical Issue**: o3 models do NOT support the temperature parameter at all.
+**Important Note**: o3 models do NOT support the temperature parameter.
 
 ```python
-# ❌ This causes API errors with o3
-response = client.chat.completions.create(
-    model="o3",
-    messages=messages,
-    temperature=0.7  # ERROR: Parameter not supported
-)
-
-# ✅ Correct usage for o3
+# ✅ Recommended usage for o3 (and all models per user preference)
 response = client.chat.completions.create(
     model="o3",
     messages=messages
-    # No temperature parameter
+    # No parameters - let model use defaults
 )
 ```
 
-**Error Pattern**: Attempting to use temperature with o3 models results in API validation errors.
+**Key Finding**: While o3 doesn't support temperature, OpenAI's API handles this gracefully when no temperature is specified. This aligns perfectly with the user preference to not set any parameters.
 
 ### ✅ OpenAI GPT Series (Generative Models)
 

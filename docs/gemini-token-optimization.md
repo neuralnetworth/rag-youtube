@@ -6,6 +6,14 @@ This document outlines optimal token settings for Google Gemini models in RAG ap
 
 **Best Practice**: Do NOT set `max_output_tokens` for Gemini models. Let the model use its native defaults for optimal performance.
 
+## User Preference
+
+**Preferred Implementation**: Do not set max_output_tokens or any token limits at all. Let all models use their defaults for maximum flexibility and compatibility. This approach:
+- Avoids the Gemini 2.5 Pro empty response bug
+- Allows models to intelligently allocate tokens based on context
+- Simplifies the codebase
+- Future-proofs the implementation as models evolve
+
 ## Research Findings
 
 ### 🚨 Known Issues with Gemini 2.5 Pro (2025)

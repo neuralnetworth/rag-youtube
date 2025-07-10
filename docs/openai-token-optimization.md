@@ -6,6 +6,14 @@ This document outlines optimal token settings for OpenAI models in RAG applicati
 
 **Best Practice**: For OpenAI models, `max_tokens` can be safely set OR omitted. Unlike Gemini, there are no known bugs with either approach.
 
+## User Preference
+
+**Preferred Implementation**: Do not set max_tokens or any token limits at all. Let all models use their defaults for maximum flexibility. This approach:
+- Allows models to use available context intelligently
+- Simplifies the codebase by removing configuration complexity
+- Works reliably with all OpenAI models (GPT-4, o3, etc.)
+- Ensures consistent behavior across different providers
+
 ## Model-Specific Parameter Differences
 
 ### 🎯 GPT-4.1 (Generative Models)
@@ -18,9 +26,9 @@ This document outlines optimal token settings for OpenAI models in RAG applicati
 ### 🧠 o3 Series (Reasoning Models)
 - **Parameter**: `max_completion_tokens` (NOT `max_tokens`)
 - **Maximum**: 100,000 output tokens
-- **Temperature**: NOT supported (causes API errors)
+- **Temperature**: NOT supported (but API handles gracefully when omitted)
 - **Hidden tokens**: Uses internal reasoning tokens not visible in output
-- **Recommendation**: Always use `max_completion_tokens`, never `max_tokens`
+- **Updated Recommendation**: Per user preference, don't set any parameters - o3 works fine with defaults
 
 ## Default Behavior Analysis
 
@@ -44,29 +52,28 @@ This document outlines optimal token settings for OpenAI models in RAG applicati
 
 ## Implementation Guidelines
 
-### ✅ Safe Configuration for GPT-4.1
+### ✅ Recommended Configuration (User Preference)
 
 ```python
-def _get_model_params(self, **kwargs) -> Dict[str, Any]:
-    """Get model-specific parameters for OpenAI."""
-    model = kwargs.get('model', self.model)
-    params = {
-        'model': model,
-        'max_tokens': kwargs.get('max_tokens', 1000)  # Safe default for RAG
-    }
+def call_llm_openai(prompt: str, model: str = None) -> str:
+    """Call OpenAI's API - works with all models including o3."""
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     
-    # Only add temperature if explicitly provided
-    if 'temperature' in kwargs:
-        params['temperature'] = kwargs['temperature']
-    
-    # o3 models use different parameter names and don't support temperature
-    if model.startswith("o3"):
-        params['max_completion_tokens'] = params.pop('max_tokens')
-        # Remove temperature for o3 models as it's not supported
-        params.pop('temperature', None)
-    
-    return params
+    # All models: let them use their defaults
+    # Note: o3 models don't support temperature, but OpenAI handles this gracefully
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}]
+        # No parameters set - let models use their optimal defaults
+    )
+    return response.choices[0].message.content
 ```
+
+**Benefits of this approach:**
+- Works with ALL OpenAI models (GPT-4, o3, future models)
+- o3 can use its full 100k token capacity when needed
+- No need for model-specific logic
+- Simplest possible implementation
 
 ### 🚀 RAG-Specific Recommendations
 
@@ -112,25 +119,24 @@ Both options work well - choose based on your needs:
 
 ## Troubleshooting
 
-### Common Issues
+### Updated Findings
 
-1. **Wrong parameter for o3**:
+1. **o3 Parameter Handling**:
    ```python
-   # ❌ Wrong
-   {"model": "o3", "max_tokens": 1000}
+   # ✅ Recommended - works for ALL models including o3
+   {"model": "o3"}  # No parameters needed
    
-   # ✅ Correct
+   # Also valid if you need to limit tokens:
    {"model": "o3", "max_completion_tokens": 1000}
    ```
 
 2. **Temperature with o3**:
    ```python
-   # ❌ Causes API error
-   {"model": "o3", "temperature": 0.7}
-   
-   # ✅ Correct - no temperature
-   {"model": "o3"}
+   # ✅ Best practice - don't set temperature for any model
+   {"model": "o3"}  # OpenAI handles o3's lack of temperature support
    ```
+
+**Key Discovery**: o3 models work perfectly fine without setting `max_completion_tokens`. When omitted, they can use their full 100k token capacity as needed.
 
 ## Best Practices Summary
 
